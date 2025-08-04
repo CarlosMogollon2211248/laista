@@ -3,6 +3,10 @@ from torch import nn
 
 from colibri.recovery.terms.fidelity import L2
 from colibri.recovery.terms.prior import Sparsity
+import matplotlib.pyplot as plt
+import numpy as np
+from colibri.metrics import psnr
+from tqdm import tqdm
 
 class Fista(nn.Module):
     r"""
@@ -58,25 +62,27 @@ class Fista(nn.Module):
         self._lambda = _lambda
 
 
-    def forward(self, y, x0=None, verbose=False):
+    def forward(self, y, gt=None, x0=None, verbose=False):
         r"""Runs the FISTA algorithm to solve the optimization problem.
 
         Args:
             y (torch.Tensor): The measurement data to be reconstructed.
             x0 (torch.Tensor, optional): The initial guess for the solution. Defaults to None.
+            gt: Ground Truth: Si no se requiere el PSNR colocar gt en None
 
         Returns:
             torch.Tensor: The reconstructed image.
         """
-
+        
         if x0 is None:
             x0 = torch.zeros_like(y)
 
         x = x0
         t = 1
         z = x.clone()
-
-        for i in range(self.max_iters):
+        errors = []
+        psnrs = []
+        for i in tqdm(range(self.max_iters)):
             x_old = x.clone()
 
             # gradient step
@@ -89,9 +95,32 @@ class Fista(nn.Module):
             t_old = t
             t = (1 + (1 + 4 * t_old**2) ** 0.5) / 2
             z = x + ((t_old - 1) / t) * (x - x_old)
-            
-            if verbose:
-                error = self.fidelity.forward(x, y, self.H).item()
-                print("Iter: ", i, "fidelity: ", error)
 
+            error = self.fidelity.forward(x, y, self.H).item()
+            errors.append(error)
+            if gt is not None:
+                psnrs.append(psnr(gt, x_old).item())
+
+        # Graficar y guardar el error
+        np.save('metricas/Fista_error.npy', errors)
+
+        if gt is not None:
+            np.save('metricas/Fista_psnr.npy', psnrs)
+
+        if verbose:
+            print(f'PSNR: {psnrs[-1]}')
+            plt.figure()
+            plt.plot(errors, color = 'r', label = 'FISTA Fidelity')
+            plt.yscale('log')
+            plt.ylabel(r'$\frac{1}{2} \|\mathbf{y} - \mathbf{H(x)}\|^2$', fontsize=14)
+            plt.xlabel(r'Iteration', fontsize=14)
+            plt.grid('on')
+            plt.legend(fontsize=14)
+            if gt is not None:
+                plt.figure()
+                plt.plot(psnrs, color = 'r', label = 'FISTA psnr')
+                plt.ylabel(r'PSNR (dB)', fontsize=14)
+                plt.xlabel(r'Iteration', fontsize=14)
+                plt.grid('on')
+                plt.legend(fontsize=14)
         return x

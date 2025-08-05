@@ -137,6 +137,6 @@ class CustomDataset(Dataset):
         # apply transformation
 
         for key, value in self.transform_dict.items():
-            data[key] = self.transform_dict[key](value)
+            data[key] = self.transform_dict[key](data[key])
 
         return data

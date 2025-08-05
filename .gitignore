@@ -1,0 +1,3 @@
+# Reglas para ignorar archivos de caché de Python
+__pycache__/
+*.pyc

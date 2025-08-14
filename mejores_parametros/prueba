@@ -1,0 +1,8 @@
+Mejores 10 resultados de la búsqueda de hiperparámetros para ISTA con apertura Hadamard
+=====================================================================================
+#1: PSNR Promedio = 18.4324 dB
+   Parámetros = {'max_iters': 300, 'alpha': 0.000965810237498298, '_lambda': 0.049106841959718456}
+
+#2: PSNR Promedio = 18.3100 dB
+   Parámetros = {'max_iters': 400, 'alpha': 0.0007603748589108995, '_lambda': 0.04263658650225366}
+

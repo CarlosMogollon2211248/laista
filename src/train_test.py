@@ -43,7 +43,6 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
         y = model.acquistion_model(img_gt)
         x0 = model.acquistion_model.forward(y, type_calculation="backward")
         img_hat = model(y, x0=x0)
-        
         # 3. Calcular la pérdida
         loss = loss_fn(img_hat, img_gt)
         

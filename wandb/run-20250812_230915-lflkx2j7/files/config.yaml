@@ -1,0 +1,99 @@
+_wandb:
+    value:
+        cli_version: 0.21.0
+        e:
+            68x68pldxpc0phfxgcf95tykbql6fv6k:
+                codePath: train.py
+                codePathLocal: train.py
+                cpu_count: 1
+                cpu_count_logical: 2
+                cudaVersion: "12.4"
+                disk:
+                    /:
+                        total: "120942624768"
+                        used: "50182868992"
+                email: carlos2211248@correo.uis.edu.co
+                executable: /usr/bin/python3
+                git:
+                    commit: 689d9ca40a85e611991c2a4f5066e264bfb06763
+                    remote: https://github.com/CarlosMogollon2211248/laista.git
+                gpu: Tesla T4
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Turing
+                      cudaCores: 2560
+                      memoryTotal: "16106127360"
+                      name: Tesla T4
+                      uuid: GPU-56c84b62-a85a-cf16-a381-5912ed10b802
+                host: 590c6f835ccb
+                memory:
+                    total: "13608370176"
+                os: Linux-6.1.123+-x86_64-with-glibc2.35
+                program: /content/drive/MyDrive/ProyectoLAISTA/train.py
+                python: CPython 3.11.13
+                root: /content/drive/MyDrive/ProyectoLAISTA
+                startedAt: "2025-08-12T23:09:15.359729Z"
+                writerId: 68x68pldxpc0phfxgcf95tykbql6fv6k
+        m: []
+        python_version: 3.11.13
+        t:
+            "1":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 53
+                - 71
+                - 105
+            "2":
+                - 1
+                - 5
+                - 11
+                - 41
+                - 49
+                - 53
+                - 71
+                - 105
+            "3":
+                - 1
+                - 13
+                - 16
+            "4": 3.11.13
+            "5": 0.21.0
+            "6": 4.55.0
+            "12": 0.21.0
+            "13": linux-x86_64
+acquisition:
+    value:
+        input_shape:
+            - 1
+            - 32
+            - 32
+        n_measurements_ratio: 0.7
+data:
+    value:
+        batch_size: 64
+        data_dir: ./data
+        img_size: 32
+device:
+    value: cuda
+laista_params:
+    value:
+        _lambda: 0.011
+        alpha: 0.0007
+        max_iters: 5
+net_params:
+    value:
+        n_channels: 1
+        num_iterations: 3
+seed:
+    value: 0
+training:
+    value:
+        learning_rate: 0.001
+        max_epochs: 50
+wandb:
+    value:
+        name: Run_FashionMNIST_0.7Ratio_cake_cutting
+        project: LAISTA_Project

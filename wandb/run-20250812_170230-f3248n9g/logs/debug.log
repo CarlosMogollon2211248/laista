@@ -1,0 +1,23 @@
+2025-08-12 17:02:30,327 INFO    MainThread:15660 [wandb_setup.py:_flush():80] Current SDK version is 0.21.1
+2025-08-12 17:02:30,327 INFO    MainThread:15660 [wandb_setup.py:_flush():80] Configure stats pid to 15660
+2025-08-12 17:02:30,329 INFO    MainThread:15660 [wandb_setup.py:_flush():80] Loading settings from C:\Users\carlo\.config\wandb\settings
+2025-08-12 17:02:30,329 INFO    MainThread:15660 [wandb_setup.py:_flush():80] Loading settings from C:\Users\carlo\OneDrive\Escritorio\ProyectoLAISTA\wandb\settings
+2025-08-12 17:02:30,329 INFO    MainThread:15660 [wandb_setup.py:_flush():80] Loading settings from environment variables
+2025-08-12 17:02:30,329 INFO    MainThread:15660 [wandb_init.py:setup_run_log_directory():703] Logging user logs to C:\Users\carlo\OneDrive\Escritorio\ProyectoLAISTA\wandb\run-20250812_170230-f3248n9g\logs\debug.log
+2025-08-12 17:02:30,330 INFO    MainThread:15660 [wandb_init.py:setup_run_log_directory():704] Logging internal logs to C:\Users\carlo\OneDrive\Escritorio\ProyectoLAISTA\wandb\run-20250812_170230-f3248n9g\logs\debug-internal.log
+2025-08-12 17:02:30,330 INFO    MainThread:15660 [wandb_init.py:init():830] calling init triggers
+2025-08-12 17:02:30,330 INFO    MainThread:15660 [wandb_init.py:init():835] wandb.init called with sweep_config: {}
+config: {'device': 'cuda', 'seed': 0, 'data': {'data_dir': './data', 'batch_size': 64, 'img_size': 32}, 'acquisition': {'input_shape': [1, 32, 32], 'n_measurements_ratio': 0.7}, 'laista_params': {'max_iters': 5, 'alpha': 0.0007, '_lambda': 0.011}, 'net_params': {'num_iterations': 3, 'n_channels': 1}, 'training': {'max_epochs': 50, 'learning_rate': 0.001}, 'wandb': {'project': 'LAISTA_Project', 'name': 'Run_FashionMNIST_0.7Ratio_cake_cutting'}, '_wandb': {}}
+2025-08-12 17:02:30,331 INFO    MainThread:15660 [wandb_init.py:init():871] starting backend
+2025-08-12 17:02:30,561 INFO    MainThread:15660 [wandb_init.py:init():874] sending inform_init request
+2025-08-12 17:02:30,607 INFO    MainThread:15660 [wandb_init.py:init():882] backend started and connected
+2025-08-12 17:02:30,609 INFO    MainThread:15660 [wandb_init.py:init():953] updated telemetry
+2025-08-12 17:02:30,653 INFO    MainThread:15660 [wandb_init.py:init():977] communicating run to backend with 90.0 second timeout
+2025-08-12 17:02:31,888 INFO    MainThread:15660 [wandb_init.py:init():1029] starting run threads in backend
+2025-08-12 17:02:32,106 INFO    MainThread:15660 [wandb_run.py:_console_start():2494] atexit reg
+2025-08-12 17:02:32,107 INFO    MainThread:15660 [wandb_run.py:_redirect():2342] redirect: wrap_raw
+2025-08-12 17:02:32,107 INFO    MainThread:15660 [wandb_run.py:_redirect():2411] Wrapping output streams.
+2025-08-12 17:02:32,107 INFO    MainThread:15660 [wandb_run.py:_redirect():2434] Redirects installed.
+2025-08-12 17:02:32,111 INFO    MainThread:15660 [wandb_init.py:init():1075] run started, returning control to user process
+2025-08-12 17:02:32,111 INFO    MainThread:15660 [wandb_watch.py:_watch():68] Watching
+2025-08-12 17:30:47,629 INFO    MsgRouterThr:15660 [mailbox.py:close():129] [no run ID] Closing mailbox, abandoning 1 handles.

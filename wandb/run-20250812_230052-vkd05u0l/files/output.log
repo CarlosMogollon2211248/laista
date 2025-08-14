@@ -1,0 +1,35 @@
+
+--- Epoch 1/50 ---
+Training: 100% 750/750 [01:42<00:00,  7.29it/s, avg_loss=155985.5442]
+Evaluating:  99% 187/188 [00:18<00:00, 10.03it/s, avg_loss=116421.5735]
+Traceback (most recent call last):
+  File "/content/drive/MyDrive/ProyectoLAISTA/train.py", line 126, in <module>
+    main()
+  File "/content/drive/MyDrive/ProyectoLAISTA/train.py", line 99, in main
+    val_loss = evaluate(model, val_loader, loss_fn, device)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/content/drive/MyDrive/ProyectoLAISTA/src/train_test.py", line 77, in evaluate
+    img_hat = model(y, x0=x0)
+              ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py", line 1857, in _call_impl
+    return inner()
+           ^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py", line 1805, in inner
+    result = forward_call(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/content/drive/MyDrive/ProyectoLAISTA/src/model.py", line 221, in forward
+    z = self.acc(x)
+        ^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/content/drive/MyDrive/ProyectoLAISTA/src/model.py", line 136, in forward
+    h = h + h_i
+      ~~^~~~~
+RuntimeError: The size of tensor a (64) must match the size of tensor b (32) at non-singleton dimension 0

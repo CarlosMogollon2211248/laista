@@ -1,0 +1,88 @@
+_wandb:
+    value:
+        cli_version: 0.21.1
+        e:
+            iv8cos7cnfyjs6otcbii3yd93gg20p4e:
+                codePath: train.py
+                codePathLocal: train.py
+                cpu_count: 4
+                cpu_count_logical: 8
+                cudaVersion: "12.7"
+                disk:
+                    /:
+                        total: "1730930536448"
+                        used: "964780875776"
+                email: carlos2211248@correo.uis.edu.co
+                executable: C:\Users\carlo\anaconda3\envs\laista\python.exe
+                git:
+                    commit: 689d9ca40a85e611991c2a4f5066e264bfb06763
+                    remote: https://github.com/CarlosMogollon2211248/laista.git
+                gpu: NVIDIA GeForce MX130
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Maxwell
+                      cudaCores: 384
+                      memoryTotal: "2147483648"
+                      name: NVIDIA GeForce MX130
+                      uuid: GPU-5c8c136b-2577-3564-32d3-9e8fd3adfbf8
+                host: Carlos_Mogollon
+                memory:
+                    total: "16974340096"
+                os: Windows-10-10.0.22631-SP0
+                program: c:\Users\carlo\OneDrive\Escritorio\ProyectoLAISTA\train.py
+                python: CPython 3.10.18
+                root: C:\Users\carlo\OneDrive\Escritorio\ProyectoLAISTA
+                startedAt: "2025-08-12T21:58:14.485214Z"
+                writerId: iv8cos7cnfyjs6otcbii3yd93gg20p4e
+        m: []
+        python_version: 3.10.18
+        t:
+            "1":
+                - 1
+                - 41
+            "2":
+                - 1
+                - 41
+            "3":
+                - 1
+                - 13
+                - 16
+            "4": 3.10.18
+            "5": 0.21.1
+            "8":
+                - 3
+            "12": 0.21.1
+            "13": windows-amd64
+acquisition:
+    value:
+        input_shape:
+            - 1
+            - 32
+            - 32
+        n_measurements_ratio: 0.7
+data:
+    value:
+        batch_size: 64
+        data_dir: ./data
+        img_size: 32
+device:
+    value: cuda
+laista_params:
+    value:
+        _lambda: 0.011
+        alpha: 0.0007
+        max_iters: 5
+net_params:
+    value:
+        n_channels: 1
+        num_iterations: 3
+seed:
+    value: 0
+training:
+    value:
+        learning_rate: 0.001
+        max_epochs: 50
+wandb:
+    value:
+        name: Run_FashionMNIST_0.7Ratio_cake_cutting
+        project: LAISTA_Project

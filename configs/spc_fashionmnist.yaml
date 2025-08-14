@@ -1,0 +1,35 @@
+# Configuración del Entorno
+device: 'cuda' # 'cuda' si tienes GPU, sino 'cpu'
+seed: 0
+
+# Configuración de los Datos
+data:
+  data_dir: './data'
+  batch_size: 64
+  img_size: 32
+
+# Configuración del Modelo de Adquisición (SPC)
+acquisition:
+  input_shape: [1, 32, 32]
+  n_measurements_ratio: 0.7
+
+# Hiperparámetros fijos de LAISTA
+laista_params:
+  max_iters: 5
+  alpha: 0.0007
+  _lambda: 0.011
+
+# Parámetros de la Red Neuronal
+net_params:
+  num_iterations: 3  # Longitud del historial T
+  n_channels: 1
+
+# Parámetros de Entrenamiento
+training:
+  max_epochs: 50
+  learning_rate: 0.001
+
+# Logging con W&B
+wandb:
+  project: 'LAISTA_Project'
+  name: 'Run_FashionMNIST_0.7Ratio_cake_cutting'

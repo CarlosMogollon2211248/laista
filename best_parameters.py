@@ -269,7 +269,7 @@ else:
 if results:
     print("\nGenerando visualización con los mejores parámetros...")
     
-    final_sample = test_images[0]
+    final_sample = test_images[0]['input'].unsqueeze(0)
     
     y_final = acquisition_model(final_sample)
     

@@ -1,0 +1,40 @@
+{
+  "os":  "Linux-6.1.123+-x86_64-with-glibc2.35",
+  "python":  "CPython 3.11.13",
+  "startedAt":  "2025-08-12T23:09:15.359729Z",
+  "program":  "/content/drive/MyDrive/ProyectoLAISTA/train.py",
+  "codePath":  "train.py",
+  "codePathLocal":  "train.py",
+  "git":  {
+    "remote":  "https://github.com/CarlosMogollon2211248/laista.git",
+    "commit":  "689d9ca40a85e611991c2a4f5066e264bfb06763"
+  },
+  "email":  "carlos2211248@correo.uis.edu.co",
+  "root":  "/content/drive/MyDrive/ProyectoLAISTA",
+  "host":  "590c6f835ccb",
+  "executable":  "/usr/bin/python3",
+  "cpu_count":  1,
+  "cpu_count_logical":  2,
+  "gpu":  "Tesla T4",
+  "gpu_count":  1,
+  "disk":  {
+    "/":  {
+      "total":  "120942624768",
+      "used":  "50182868992"
+    }
+  },
+  "memory":  {
+    "total":  "13608370176"
+  },
+  "gpu_nvidia":  [
+    {
+      "name":  "Tesla T4",
+      "memoryTotal":  "16106127360",
+      "cudaCores":  2560,
+      "architecture":  "Turing",
+      "uuid":  "GPU-56c84b62-a85a-cf16-a381-5912ed10b802"
+    }
+  ],
+  "cudaVersion":  "12.4",
+  "writerId":  "68x68pldxpc0phfxgcf95tykbql6fv6k"
+}

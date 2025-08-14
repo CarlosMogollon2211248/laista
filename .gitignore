@@ -1,3 +1,27 @@
-# Reglas para ignorar archivos de caché de Python
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Archivos de ejecución y logs
+*.log
+wandb/
+
+# Checkpoints y modelos entrenados
+checkpoints/
+*.pth
+*.onnx
+
+# Datos y métricas generadas
+data/
+metricas/
+
+# Carpetas de IDEs
+.vscode/
+.idea/

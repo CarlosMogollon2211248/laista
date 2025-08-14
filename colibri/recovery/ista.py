@@ -5,7 +5,7 @@ from colibri.recovery.terms.fidelity import L2
 from colibri.recovery.terms.prior import Sparsity
 import matplotlib.pyplot as plt
 import numpy as np
-from colibri.metrics import psnr
+from colibri.metrics import psnr, mse
 
 class Ista(nn.Module):
     r"""
@@ -73,6 +73,7 @@ class Ista(nn.Module):
         x = x0
         errors = []
         psnrs = []
+        mses = []
         for i in range(self.max_iters):
 
             x_old = x.clone()
@@ -87,15 +88,19 @@ class Ista(nn.Module):
             errors.append(error)
             if gt is not None:
                 psnrs.append(psnr(gt, x_old).item())
+                mses.append(mse(gt, x_old).item())
                    
         # Graficar y guardar el error
         np.save('metricas/Ista_error.npy', errors)
 
         if gt is not None:
             np.save('metricas/Ista_psnr.npy', psnrs)
+            np.save('metricas/Fista_mse.npy', mses)
 
         if verbose:
-            print(f'PSNR: {psnrs[-1]}')
+            if gt is not None:
+                print(f'PSNR: {psnrs[-1]}')
+                print(f'MSE: {mses[-1]}')
             plt.figure()
             plt.plot(errors, color = 'r', label = 'ISTA Fidelity')
             plt.yscale('log')
@@ -107,6 +112,14 @@ class Ista(nn.Module):
                 plt.figure()
                 plt.plot(psnrs, color = 'r', label = 'ISTA psnr')
                 plt.ylabel(r'PSNR (dB)', fontsize=14)
+                plt.xlabel(r'Iteration', fontsize=14)
+                plt.grid('on')
+                plt.legend(fontsize=14)
+
+                plt.figure()
+                plt.plot(mses, color = 'b', label = 'ISTA MSE')
+                plt.yscale('log') # El MSE a menudo se ve mejor en escala logarítmica
+                plt.ylabel(r'MSE', fontsize=14)
                 plt.xlabel(r'Iteration', fontsize=14)
                 plt.grid('on')
                 plt.legend(fontsize=14)

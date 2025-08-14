@@ -134,21 +134,21 @@ from colibri.recovery.terms.fidelity import L2
 from colibri.recovery.terms.transforms import DCT2D
 
 algo_params = {
-    "max_iters": 500,
-    "alpha": 1e-4,
-    "_lambda": 0.01,
+    "max_iters": 60,
+    "alpha": 0.0004774212882981862,
+    "_lambda": 0.010969419598768213,
 }
 
 fidelity = L2()
 prior = Sparsity(basis="dct")
 
 # SELECCIONAR ALGORITMO
-fista = Fista(acquisition_model, fidelity, prior, **algo_params)
-# ista = Ista(acquisition_model, fidelity, prior, **algo_params)
+# fista = Fista(acquisition_model, fidelity, prior, **algo_params)
+ista = Ista(acquisition_model, fidelity, prior, **algo_params)
 
 x0 = acquisition_model.forward(y, type_calculation="backward")
-x_hat = fista(y, gt=sample, x0=x0, verbose=True)
-# x_hat = ista(y, gt=sample, x0=x0, verbose=True)
+# x_hat = fista(y, gt=sample, x0=x0, verbose=True)
+x_hat = ista(y, gt=sample, x0=x0, verbose=True)
 
 basis = DCT2D()
 

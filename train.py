@@ -104,8 +104,17 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
         # Guardar el mejor modelo hasta ahora (basado en la pérdida de validación)
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), best_model_path)
-            print(f"--> Nuevo mejor modelo guardado en {best_model_path}")
+    
+            checkpoint = {
+                'epoch': epoch + 1,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'best_val_loss': best_val_loss
+            }
+    
+            torch.save(checkpoint, best_model_path)
+            print(f"--> Nuevo mejor modelo guardado {best_model_path}")
+            print(f"--> Nuevo mejor checkpoint guardado en la época {epoch + 1}")
 
     # 7. Evaluación Final en el Test Set
     # --------------------------------------

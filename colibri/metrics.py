@@ -33,16 +33,13 @@ def ssim(y_true, y_pred, data_range=None):
     return structural_similarity_index_measure(y_pred, y_true, data_range=data_range)
 
 def mse(y_true, y_pred):
-    """Calculate Mean Squared Error between y_true and y_pred.
-
-    Args:
-        y_true: Tensor of actual values.
-        y_pred: Tensor of predicted values.
-
-    Returns:
-        MSE between y_true and y_pred.
-    """
-    return mean_squared_error(y_pred, y_true)
+    """Calculate Mean Squared Error between y_true and y_pred."""
+    
+    # Aseguramos que los tensores sean contiguos en memoria antes de calcular el MSE
+    y_true_cont = y_true.contiguous()
+    y_pred_cont = y_pred.contiguous()
+    
+    return mean_squared_error(y_pred_cont, y_true_cont)
 
 def mae(y_true, y_pred):
     """Calculate Mean Absolute Error between y_true and y_pred.

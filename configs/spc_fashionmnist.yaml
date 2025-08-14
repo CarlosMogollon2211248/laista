@@ -5,7 +5,7 @@ seed: 0
 # Configuración de los Datos
 data:
   data_dir: './data'
-  batch_size: 64
+  batch_size: 128
   img_size: 32
 
 # Configuración del Modelo de Adquisición (SPC)
@@ -15,9 +15,9 @@ acquisition:
 
 # Hiperparámetros fijos de LAISTA
 laista_params:
-  max_iters: 5
-  alpha: 0.0007
-  _lambda: 0.011
+  max_iters: 100
+  alpha: 0.0004774212882981862
+  _lambda: 0.010969419598768213
 
 # Parámetros de la Red Neuronal
 net_params:
@@ -26,7 +26,7 @@ net_params:
 
 # Parámetros de Entrenamiento
 training:
-  max_epochs: 50
+  max_epochs: 100
   learning_rate: 0.001
 
 # Logging con W&B

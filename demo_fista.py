@@ -129,21 +129,24 @@ y = acquisition_model(sample)
 # Reconstruct image
 from colibri.recovery.fista import Fista
 from colibri.recovery.ista import Ista 
-from colibri.recovery.terms.prior import Sparsity
+from colibri.recovery.terms.prior import Sparsity, Denoiser
 from colibri.recovery.terms.fidelity import L2
 from colibri.recovery.terms.transforms import DCT2D
 
 algo_params = {
-    "max_iters": 60,
+    "max_iters": 300,
     "alpha": 0.0004774212882981862,
     "_lambda": 0.010969419598768213,
 }
 
 fidelity = L2()
-prior = Sparsity(basis="dct")
+# prior = Sparsity(basis="dct")
 
 # SELECCIONAR ALGORITMO
 # fista = Fista(acquisition_model, fidelity, prior, **algo_params)
+
+prior = Denoiser({'in_channels': 1, 'out_channels': 1, 'pretrained': "download_lipschitz", 'device': device}).to(device)
+
 ista = Ista(acquisition_model, fidelity, prior, **algo_params)
 
 x0 = acquisition_model.forward(y, type_calculation="backward")

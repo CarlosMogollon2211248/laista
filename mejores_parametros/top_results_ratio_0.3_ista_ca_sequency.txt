@@ -1,0 +1,32 @@
+Mejores 10 resultados de la búsqueda de hiperparámetros para ISTA con apertura Hadamard
+=====================================================================================
+#1: PSNR Promedio = 18.3546 dB
+   Parámetros = {'max_iters': 500, 'alpha': 0.0009168345355533158, '_lambda': 0.010233914570888597}
+
+#2: PSNR Promedio = 18.3166 dB
+   Parámetros = {'max_iters': 200, 'alpha': 0.0008053116036047403, '_lambda': 0.015106944996973622}
+
+#3: PSNR Promedio = 18.3015 dB
+   Parámetros = {'max_iters': 500, 'alpha': 0.0004534898757212147, '_lambda': 0.008964136036701004}
+
+#4: PSNR Promedio = 18.3012 dB
+   Parámetros = {'max_iters': 300, 'alpha': 0.00048176568208928695, '_lambda': 0.009892611758363774}
+
+#5: PSNR Promedio = 18.2766 dB
+   Parámetros = {'max_iters': 300, 'alpha': 0.0004774212882981862, '_lambda': 0.010969419598768213}
+
+#6: PSNR Promedio = 18.0721 dB
+   Parámetros = {'max_iters': 300, 'alpha': 0.0009681219949709697, '_lambda': 0.03644688809480385}
+
+#7: PSNR Promedio = 18.0306 dB
+   Parámetros = {'max_iters': 500, 'alpha': 0.0007999556691277931, '_lambda': 0.032387637928049634}
+
+#8: PSNR Promedio = 18.0198 dB
+   Parámetros = {'max_iters': 100, 'alpha': 0.0006221853067085784, '_lambda': 0.025800127794881614}
+
+#9: PSNR Promedio = 17.8627 dB
+   Parámetros = {'max_iters': 200, 'alpha': 0.0009669403040930512, '_lambda': 0.04822396787871899}
+
+#10: PSNR Promedio = 17.8529 dB
+   Parámetros = {'max_iters': 300, 'alpha': 0.000965810237498298, '_lambda': 0.049106841959718456}
+

@@ -104,7 +104,7 @@ acquisition_config = dict(
     input_shape=(1, M, N),
 )
 
-ratio = 0.7
+ratio = 0.3
 if acquisition_name == "spc":
     n_measurements = int(ratio * (M * N))
     print('Número de mediciones:', n_measurements)
@@ -112,7 +112,7 @@ if acquisition_name == "spc":
 
 # --- CÓDIGO DE APERTURA (HADAMARD) ---
 n = 10
-ordering = "cake_cutting"
+ordering = "sequency"
 
 size = int(np.sqrt(2**n))
 index_matrix = size*size - get_index_matrix(size, ordering)
@@ -157,7 +157,7 @@ param_ranges = {
 # --- Configuraciones de la búsqueda ---
 num_combinations = 30
 num_images_per_class = 20
-output_filename = f'mejores_parametros/top_results_ratio_{ratio}_ista_ca_cake_cutting.txt'
+output_filename = f'mejores_parametros/top_results_ratio_{ratio}_ista_ca_sequency.txt'
 
 # test_images = [dataset[i]['input'].unsqueeze(0).to(device) for i in range(num_images_for_avg)]
 selected_indices = []

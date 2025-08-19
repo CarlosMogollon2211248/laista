@@ -95,7 +95,7 @@ class Ista(nn.Module):
 
         if gt is not None:
             np.save('metricas/Ista_psnr.npy', psnrs)
-            np.save('metricas/Fista_mse.npy', mses)
+            np.save('metricas/Ista_mse.npy', mses)
 
         if verbose:
             if gt is not None:

@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from colibri.recovery.terms.fidelity import L2
 from colibri.recovery.terms.prior import Sparsity
-from colibri.metrics import psnr
+from colibri.metrics import psnr, mse
 
 class Up(nn.Module):
     """Upscaling then double conv"""
@@ -214,7 +214,7 @@ class Laista(nn.Module):
         
         errors = []
         psnrs = []
-
+        mses = []
         for i in range(self.max_iters):
             # Paso de gradiente y proximal (actualización de x)
             x = z - self.alpha * self.fidelity.grad(z, y, self.H)
@@ -229,26 +229,25 @@ class Laista(nn.Module):
             
             if gt is not None:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
-                x_norm = (x - x.min()) / (x.max() - x.min()) if x.max() > x.min() else x
-                psnr_val = psnr(y_true=gt, y_pred=x_norm, data_range=1.0).item()
-                psnrs.append(psnr_val)
+                x_norm = torch.sigmoid(x)
+                psnrs.append(psnr(gt, x_norm).item())
+                mses.append(mse(gt, x_norm).item())
 
         # Guardar métricas en archivos
         np.save('metricas/Laista_error.npy', errors)
         if gt is not None:
             np.save('metricas/Laista_psnr.npy', psnrs)
-
+            np.save('metricas/Laista_mse.npy', mses)
         # --- Visualización de resultados ---
         if verbose:
             if gt is not None:
-                print(f'PSNR final: {psnrs[-1]:.2f} dB')
+                print(f'PSNR: {psnrs[-1]}')
+                print(f'MSE: {mses[-1]}')
             
             # Gráfica del Error de Fidelidad
             plt.figure(figsize=(12, 5))
-            plt.subplot(1, 2, 1)
             plt.plot(errors, color='b', label='LAISTA Fidelity')
             plt.yscale('log')
-            plt.title('Convergencia del Error de Fidelidad')
             plt.ylabel(r'$\frac{1}{2} \|\mathbf{y} - \mathbf{H(x)}\|^2_2$', fontsize=14)
             plt.xlabel(r'Iteración', fontsize=14)
             plt.grid(True)
@@ -256,14 +255,21 @@ class Laista(nn.Module):
             
             if gt is not None:
                 # Gráfica del PSNR
-                plt.subplot(1, 2, 2)
+                plt.figure()
                 plt.plot(psnrs, color='g', label='LAISTA PSNR')
-                plt.title('Evolución del PSNR')
                 plt.ylabel(r'PSNR (dB)', fontsize=14)
                 plt.xlabel(r'Iteración', fontsize=14)
                 plt.grid(True)
                 plt.legend(fontsize=12)
-            
+
+                plt.figure()
+                plt.plot(mses, color = 'b', label = 'LAISTA MSE')
+                plt.yscale('log') # El MSE a menudo se ve mejor en escala logarítmica
+                plt.ylabel(r'MSE', fontsize=14)
+                plt.xlabel(r'Iteration', fontsize=14)
+                plt.grid('on')
+                plt.legend(fontsize=14)
+
             plt.tight_layout()
             plt.show()
             

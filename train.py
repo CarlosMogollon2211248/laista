@@ -15,6 +15,8 @@ from src.utils import get_hadamard_patterns  # Importamos la función para los p
 
 # --- Modulos de colibri ---
 from colibri.optics import SPC
+from colibri.recovery.terms.prior import Sparsity, Denoiser
+from colibri.recovery.terms.fidelity import L2
 
 wandb.login(key="e12adcce380e93cac31fbde78d8e8d3b8fb94a90")
 
@@ -66,11 +68,23 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     }
     acquisition_model = SPC(**acquisition_config).to(device)
 
+    fidelity = L2()
+    prior = Denoiser({'in_channels': 1, 'out_channels': 1, 'pretrained': "download_lipschitz", 'device': device}).to(device)
+
+    # Congelar los parametros del denoiser
+    for param in prior.parameters():
+        param.requires_grad = False
+
     model = Laista(
         acquistion_model=acquisition_model,
+        fidelity = fidelity,
+        prior = prior,
         **config['laista_params'],
         **config['net_params']
     ).to(device)
+    
+    for param in model.parameters():
+        param.requires_grad = True
 
     # Optimizador y Función de Pérdida
     optimizer = torch.optim.Adam(model.parameters(), lr=config['training']['learning_rate'])

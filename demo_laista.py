@@ -33,6 +33,8 @@ from src.model import Laista
 from src.utils import get_hadamard_patterns
 from colibri.optics import SPC
 from colibri.recovery.terms.transforms import DCT2D
+from colibri.recovery.terms.prior import Sparsity, Denoiser
+from colibri.recovery.terms.fidelity import L2
 
 # --- Configuración del Dispositivo ---
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -86,9 +88,14 @@ acquisition_config = {
 }
 acquisition_model = SPC(**acquisition_config).to(device)
 
+fidelity = L2()
+prior = Denoiser({'in_channels': 1, 'out_channels': 1, 'pretrained': "download_lipschitz", 'device': device}).to(device)
+
 # B. Instanciar el modelo LAISTA con la misma arquitectura
 model = Laista(
     acquistion_model=acquisition_model,
+    fidelity = fidelity,
+    prior = prior
     **config['laista_params'],
     **config['net_params']
 ).to(device)

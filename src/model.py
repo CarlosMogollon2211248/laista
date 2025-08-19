@@ -273,4 +273,4 @@ class Laista(nn.Module):
             plt.tight_layout()
             plt.show()
             
-        return torch.sigmoid(x)
+        return torch.sigmoid(z)

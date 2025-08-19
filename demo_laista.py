@@ -23,9 +23,10 @@ El script:
 import os
 import torch
 import yaml
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pltp
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+import matplotlib.pyplot as plt
 
 # --- Módulos de nuestro proyecto ---
 from src.model import Laista

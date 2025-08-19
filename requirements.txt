@@ -59,6 +59,7 @@ pure_eval==0.2.3
 Pygments==2.19.2
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
+PyYAML==6.0.2
 pyzmq==27.0.1
 requests==2.32.4
 scikit-image==0.25.2

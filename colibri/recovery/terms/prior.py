@@ -77,41 +77,41 @@ class Sparsity(torch.nn.Module):
         else:
             return x
         
-# from deepinv.models import DnCNN, Restormer, SCUNet, SwinIR, UNet, DRUNet
+from deepinv.models import DnCNN, Restormer, SCUNet, SwinIR, UNet, DRUNet
 
-# class Denoiser(torch.nn.Module):
+class Denoiser(torch.nn.Module):
 
-#     def __init__(self, denoiser_args=None,denoiser='DnCNN'):
-#         super().__init__()
+    def __init__(self, denoiser_args=None,denoiser='DnCNN'):
+        super().__init__()
 
-#         if denoiser == 'DnCNN':
-#             self.denoiser = DnCNN(**denoiser_args)
-#         if denoiser == 'Restormer':
-#             self.denoiser = Restormer(**denoiser_args)
+        if denoiser == 'DnCNN':
+            self.denoiser = DnCNN(**denoiser_args)
+        if denoiser == 'Restormer':
+            self.denoiser = Restormer(**denoiser_args)
             
-#         if denoiser == 'SCUNet':
-#             self.denoiser = SCUNet(**denoiser_args)
-#         if denoiser == 'SwinIR':
-#             self.denoiser = SwinIR(**denoiser_args)
-#         if denoiser == 'UNet':
-#             self.denoiser = UNet(**denoiser_args)
-#         if denoiser == 'DRUNet':
-#             self.denoiser = DRUNet(**denoiser_args)
+        if denoiser == 'SCUNet':
+            self.denoiser = SCUNet(**denoiser_args)
+        if denoiser == 'SwinIR':
+            self.denoiser = SwinIR(**denoiser_args)
+        if denoiser == 'UNet':
+            self.denoiser = UNet(**denoiser_args)
+        if denoiser == 'DRUNet':
+            self.denoiser = DRUNet(**denoiser_args)
 
-#     def prox(self, x, _lambda):
-#         with torch.no_grad():
-#             if x.shape[1] == 1:
-#                 x = self.denoiser(x,_lambda)
+    def prox(self, x, _lambda):
+        with torch.no_grad():
+            if x.shape[1] == 1:
+                x = self.denoiser(x,_lambda)
             
-#             if x.shape[1] == 2:
-#                 x_c1 = x[:, 0:1, :, :]  
-#                 x_c2 = x[:, 1:2, :, :]
+            if x.shape[1] == 2:
+                x_c1 = x[:, 0:1, :, :]  
+                x_c2 = x[:, 1:2, :, :]
 
-#                 d_c1 = self.denoiser(x_c1)
-#                 d_c2 = self.denoiser(x_c2)
+                d_c1 = self.denoiser(x_c1)
+                d_c2 = self.denoiser(x_c2)
 
-#                 x = torch.cat((d_c1, d_c2), dim=1)
-#         return x
+                x = torch.cat((d_c1, d_c2), dim=1)
+        return x
 
     
 

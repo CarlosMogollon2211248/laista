@@ -89,7 +89,7 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
 
     # <--- NUEVO: Inicialización del Scheduler
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.1, patience=5, verbose=True
+        optimizer, mode='min', factor=0.1, patience=5
     )
 
     # 5. Inicializar Logging (Weights & Biases)

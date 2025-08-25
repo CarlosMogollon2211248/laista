@@ -27,7 +27,7 @@ net_params:
 # Parámetros de Entrenamiento
 training:
   max_epochs: 100
-  learning_rate: 0.001
+  learning_rate: 0.1
 
 # Logging con W&B
 wandb:

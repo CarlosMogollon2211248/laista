@@ -87,6 +87,11 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     optimizer = torch.optim.Adam(model.parameters(), lr=config['training']['learning_rate'])
     loss_fn = nn.MSELoss()
 
+    # <--- NUEVO: Inicialización del Scheduler
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode='min', factor=0.1, patience=5, verbose=True
+    )
+
     # 5. Inicializar Logging (Weights & Biases)
     # ---------------------------------------------
     wandb.init(
@@ -109,8 +114,11 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
         train_loss = train_one_epoch(model, train_loader, optimizer, loss_fn, device)
         val_loss = evaluate(model, val_loader, loss_fn, device)
         
+        scheduler.step(val_loss)
+        current_lr = optimizer.param_groups[0]['lr']
+
         print(f"Epoch {epoch+1}: Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
-        wandb.log({'epoch': epoch+1, 'train_loss': train_loss, 'val_loss': val_loss})
+        wandb.log({'epoch': epoch+1, 'train_loss': train_loss, 'val_loss': val_loss, 'learning_rate': current_lr})
         
         # Guardar el mejor modelo hasta ahora (basado en la pérdida de validación)
         if val_loss < best_val_loss:
@@ -130,7 +138,8 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     # 7. Evaluación Final en el Test Set
     # --------------------------------------
     print("\n--- Entrenamiento finalizado. Evaluando en el Test Set con el mejor modelo. ---")
-    model.load_state_dict(torch.load(best_model_path)) # Cargar los mejores pesos
+    checkpoint = torch.load(best_model_path)
+    model.load_state_dict(checkpoint['model_state_dict'])
     
     test_loss = evaluate(model, test_loader, loss_fn, device)
     

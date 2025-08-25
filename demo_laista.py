@@ -95,7 +95,7 @@ prior = Denoiser({'in_channels': 1, 'out_channels': 1, 'pretrained': "download_l
 model = Laista(
     acquistion_model=acquisition_model,
     fidelity = fidelity,
-    prior = prior
+    prior = prior,
     **config['laista_params'],
     **config['net_params']
 ).to(device)

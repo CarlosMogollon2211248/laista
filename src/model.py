@@ -229,7 +229,7 @@ class Laista(nn.Module):
             
             if gt is not None:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
-                x_norm = torch.sigmoid(x)
+                x_norm = torch.sigmoid(z)
                 psnrs.append(psnr(gt, x_norm).item())
                 mses.append(mse(gt, x_norm).item())
 

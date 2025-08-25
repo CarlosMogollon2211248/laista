@@ -82,9 +82,6 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
         **config['laista_params'],
         **config['net_params']
     ).to(device)
-    
-    for param in model.parameters():
-        param.requires_grad = True
 
     # Optimizador y Función de Pérdida
     optimizer = torch.optim.Adam(model.parameters(), lr=config['training']['learning_rate'])

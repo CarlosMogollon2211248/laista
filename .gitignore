@@ -14,9 +14,9 @@ env/
 wandb/
 
 # Checkpoints y modelos entrenados
-checkpoints/
-*.pth
-*.onnx
+# checkpoints/
+# *.pth
+# *.onnx
 
 # Datos y métricas generadas
 data/

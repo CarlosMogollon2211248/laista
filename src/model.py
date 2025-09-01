@@ -123,7 +123,7 @@ class Accelerator(nn.Module):
 
     def forward(self, x):
         # Siempre añade la reconstrucción más reciente
-        self.history.append(x.detach())
+        self.history.append(x)
 
         # Si el historial es demasiado largo, quita el elemento más antiguo
         if len(self.history) > len(self.encoders): # len(self.encoders) es tu T
@@ -219,23 +219,31 @@ class Laista(nn.Module):
             # Paso de gradiente y proximal (actualización de x)
             x = z - self.alpha * self.fidelity.grad(z, y, self.H)
             x = self.prior.prox(x, self._lambda)
-            
+            x.requires_grad_(True)
             # Paso de aceleración aprendido (actualización de z)
             z = self.acc(x)
+            x_detached = x.detach()
+
+            
 
             # --- Cálculo y almacenamiento de métricas (igual que en ISTA) ---
-            error = self.fidelity.forward(x, y, self.H).item()
-            errors.append(error)
+            # 
             
+
             if gt is not None:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
-                x_norm = torch.sigmoid(z)
+                error = self.fidelity.forward(x, y, self.H).item()
+                errors.append(error)
+                if x_detached.max() > x_detached.min():
+                    x_norm = (x_detached - x_detached.min()) / (x_detached.max() - x_detached.min())
+                else:
+                    x_norm = x_detached
                 psnrs.append(psnr(gt, x_norm).item())
                 mses.append(mse(gt, x_norm).item())
 
         # Guardar métricas en archivos
-        np.save('metricas/Laista_error.npy', errors)
         if gt is not None:
+            np.save('metricas/Laista_error.npy', errors)
             np.save('metricas/Laista_psnr.npy', psnrs)
             np.save('metricas/Laista_mse.npy', mses)
         # --- Visualización de resultados ---
@@ -273,4 +281,4 @@ class Laista(nn.Module):
             plt.tight_layout()
             plt.show()
             
-        return torch.sigmoid(z)
+        return x

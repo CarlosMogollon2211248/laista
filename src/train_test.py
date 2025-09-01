@@ -43,8 +43,13 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
         y = model.acquistion_model(img_gt)
         x0 = model.acquistion_model.forward(y, type_calculation="backward")
         img_hat = model(y, x0=x0)
+
+        if img_hat.max() > img_hat.min():
+            img_hat_norm = (img_hat - img_hat.min()) / (img_hat.max() - img_hat.min())
+        else:
+            img_hat_norm = img_hat # Evitar división por cero
         # 3. Calcular la pérdida
-        loss = loss_fn(img_hat, img_gt)
+        loss = loss_fn(img_hat_norm, img_gt)
         
         # 4. Backpropagation (cálculo de gradientes)
         loss.backward()
@@ -74,8 +79,12 @@ def evaluate(model, dataloader, loss_fn, device):
         y = model.acquistion_model(img_gt)
         x0 = model.acquistion_model.forward(y, type_calculation="backward")
         img_hat = model(y, x0=x0)
-        
-        loss = loss_fn(img_hat, img_gt)
+        if img_hat.max() > img_hat.min():
+            img_hat_norm = (img_hat - img_hat.min()) / (img_hat.max() - img_hat.min())
+        else:
+            img_hat_norm = img_hat # Evitar división por cero
+
+        loss = loss_fn(img_hat_norm, img_gt)
         
         # Actualizar y mostrar métricas
         loss_meter.update(loss.item(), img_gt.size(0))

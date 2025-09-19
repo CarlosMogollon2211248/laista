@@ -111,14 +111,15 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     for epoch in range(config['training']['max_epochs']):
         print(f"\n--- Epoch {epoch+1}/{config['training']['max_epochs']} ---")
         
-        train_loss = train_one_epoch(model, train_loader, optimizer, loss_fn, device)
-        val_loss = evaluate(model, val_loader, loss_fn, device)
+        train_loss, train_psnr = train_one_epoch(model, train_loader, optimizer, loss_fn, device)
+        val_loss, val_psnr = evaluate(model, val_loader, loss_fn, device)
         
         scheduler.step(val_loss)
         current_lr = optimizer.param_groups[0]['lr']
 
         print(f"Epoch {epoch+1}: Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}")
-        wandb.log({'epoch': epoch+1, 'train_loss': train_loss, 'val_loss': val_loss, 'learning_rate': current_lr})
+        wandb.log({'train_loss': train_loss, 'val_loss': val_loss, 'learning_rate': current_lr, 
+                   'train_psnr': train_psnr, 'val_psnr': val_psnr})
         
         # Guardar el mejor modelo hasta ahora (basado en la pérdida de validación)
         if val_loss < best_val_loss:

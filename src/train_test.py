@@ -2,6 +2,7 @@
 
 import torch
 from tqdm import tqdm
+from torchmetrics import PeakSignalNoiseRatio
 
 # --- Clase de Ayuda para promediar métricas ---
 # (Más adelante puedes mover esto a src/utils.py)
@@ -29,7 +30,9 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
     """
     model.train()  # Pone el modelo en modo de entrenamiento
     loss_meter = AverageMeter()
-    
+    psnr_meter = AverageMeter()
+    psnr_metric = PeakSignalNoiseRatio(data_range=1.0).to(device)
+
     # tqdm crea una barra de progreso para el bucle
     data_loop = tqdm(dataloader, total=len(dataloader), desc="Training")
     
@@ -50,7 +53,8 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
             img_hat_norm = img_hat # Evitar división por cero
         # 3. Calcular la pérdida
         loss = loss_fn(img_hat_norm, img_gt)
-        
+        psnr = psnr_metric(img_hat_norm, img_gt).item()
+
         # 4. Backpropagation (cálculo de gradientes)
         loss.backward()
         
@@ -59,9 +63,13 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
         
         # Actualizar y mostrar métricas
         loss_meter.update(loss.item(), img_gt.size(0))
-        data_loop.set_postfix(avg_loss=f'{loss_meter.avg:.4f}')
-        
-    return loss_meter.avg
+        psnr_meter.update(psnr, img_gt.size(0))
+        data_loop.set_postfix({
+            'avg_loss': f'{loss_meter.avg:.4f}',
+            'avg_psnr': f'{psnr_meter.avg:.2f} dB'
+            })
+
+    return loss_meter.avg, psnr_meter.avg
 
 def evaluate(model, dataloader, loss_fn, device):
     """
@@ -69,7 +77,9 @@ def evaluate(model, dataloader, loss_fn, device):
     """
     model.eval()  # Pone el modelo en modo de evaluación
     loss_meter = AverageMeter()
-    
+    psnr_meter = AverageMeter()
+    psnr_metric = PeakSignalNoiseRatio(data_range=1.0).to(device)
+
     data_loop = tqdm(dataloader, total=len(dataloader), desc="Evaluating")
     
     for data in data_loop:
@@ -85,9 +95,14 @@ def evaluate(model, dataloader, loss_fn, device):
             img_hat_norm = img_hat # Evitar división por cero
 
         loss = loss_fn(img_hat_norm, img_gt)
-        
+        psnr = psnr_metric(img_hat_norm, img_gt).item()
+
         # Actualizar y mostrar métricas
         loss_meter.update(loss.item(), img_gt.size(0))
-        data_loop.set_postfix(avg_loss=f'{loss_meter.avg:.4f}')
-            
-    return loss_meter.avg
+        psnr_meter.update(psnr, img_gt.size(0))
+        data_loop.set_postfix({
+            'avg_loss': f'{loss_meter.avg:.4f}',
+            'avg_psnr': f'{psnr_meter.avg:.2f} dB'
+            })
+        
+    return loss_meter.avg, psnr_meter.avg

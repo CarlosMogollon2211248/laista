@@ -1,0 +1,25 @@
+slurmstepd: error: Unable to create TMPDIR [/tmp/job_31399100/step_0.0]: No such file or directory
+slurmstepd: error: Setting TMPDIR to /tmp
+Adding package `anaconda/2024.02` to your environment
+no change     /opt/shared/anaconda/2024.02/condabin/conda
+no change     /opt/shared/anaconda/2024.02/bin/conda
+no change     /opt/shared/anaconda/2024.02/bin/conda-env
+no change     /opt/shared/anaconda/2024.02/bin/activate
+no change     /opt/shared/anaconda/2024.02/bin/deactivate
+no change     /opt/shared/anaconda/2024.02/etc/profile.d/conda.sh
+no change     /opt/shared/anaconda/2024.02/etc/fish/conf.d/conda.fish
+no change     /opt/shared/anaconda/2024.02/shell/condabin/Conda.psm1
+no change     /opt/shared/anaconda/2024.02/shell/condabin/conda-hook.ps1
+no change     /opt/shared/anaconda/2024.02/lib/python3.11/site-packages/xontrib/conda.xsh
+no change     /opt/shared/anaconda/2024.02/etc/profile.d/conda.csh
+no change     /home/4031/.bashrc
+No action taken.
+
+EnvironmentNameNotFound: Could not find conda environment: cunet
+You can list all discoverable environments with `conda info --envs`.
+
+
+Traceback (most recent call last):
+  File "/work/ececis_research/kevinroa/TG/laista/train.py", line 6, in <module>
+    import torch
+ModuleNotFoundError: No module named 'torch'

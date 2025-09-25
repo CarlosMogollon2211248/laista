@@ -80,7 +80,8 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
         fidelity = fidelity,
         prior = prior,
         **config['laista_params'],
-        **config['net_params']
+        **config['net_params'],
+        device= device
     ).to(device)
 
     # Optimizador y Función de Pérdida

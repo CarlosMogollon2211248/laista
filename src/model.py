@@ -161,7 +161,7 @@ class Laista(nn.Module):
            \mathbf{z}_{k+1} &= \text{Accelerator}(\mathbf{x}_{k+1})
         \end{align*}
     """
-    def __init__(self, acquistion_model, fidelity=L2(), prior=Sparsity("dct"), max_iters=5, alpha=1e-3, _lambda=0.1, num_iterations=3, n_channels=1):
+    def __init__(self, acquistion_model, fidelity=L2(), prior=Sparsity("dct"), max_iters=5, alpha=1e-3, _lambda=0.1, num_iterations=3, n_channels=1, device = None):
         r"""
         Args:
             acquistion_model (nn.Module): El modelo de adquisición del sistema (operador H).
@@ -188,7 +188,11 @@ class Laista(nn.Module):
         # Red neuronal de aceleración y sus parámetros
         self.T = num_iterations
         self.n_channels = n_channels
-        self.acc = Accelerator(self.T, self.n_channels)
+        self.device = device
+        if device is not None:
+            self.acc = Accelerator(self.T, self.n_channels).to(device)
+        else:
+            self.acc = Accelerator(self.T, self.n_channels)
 
     def forward(self, y, gt=None, x0=None, verbose=False):
         r"""
@@ -203,7 +207,7 @@ class Laista(nn.Module):
         Returns:
             torch.Tensor: La imagen reconstruida.
         """
-
+        
         self.acc.history = []
         
         if x0 is None:
@@ -229,17 +233,16 @@ class Laista(nn.Module):
             # --- Cálculo y almacenamiento de métricas (igual que en ISTA) ---
             # 
             
-
             if gt is not None:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
-                error = self.fidelity.forward(x, y, self.H).item()
-                errors.append(error)
+                error = self.fidelity.forward(x, y, self.H)
+                errors.append(error.cpu())
                 if x_detached.max() > x_detached.min():
                     x_norm = (x_detached - x_detached.min()) / (x_detached.max() - x_detached.min())
                 else:
                     x_norm = x_detached
-                psnrs.append(psnr(gt, x_norm).item())
-                mses.append(mse(gt, x_norm).item())
+                psnrs.append(psnr(gt, x_norm).cpu())
+                mses.append(mse(gt, x_norm).cpu())
 
         # Guardar métricas en archivos
         if gt is not None:

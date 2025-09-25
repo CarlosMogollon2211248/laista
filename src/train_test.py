@@ -43,9 +43,9 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
         optimizer.zero_grad()
         
         # 2. Forward pass completo del modelo
-        y = model.acquistion_model(img_gt)
-        x0 = model.acquistion_model.forward(y, type_calculation="backward")
-        img_hat = model(y, x0=x0)
+        y = model.acquistion_model(img_gt).to(device)
+        x0 = model.acquistion_model.forward(y, type_calculation="backward").to(device)
+        img_hat = model(y, x0=x0).to(device)
 
         if img_hat.max() > img_hat.min():
             img_hat_norm = (img_hat - img_hat.min()) / (img_hat.max() - img_hat.min())
@@ -86,9 +86,9 @@ def evaluate(model, dataloader, loss_fn, device):
         img_gt = data[0].to(device)
         
         # Forward pass completo
-        y = model.acquistion_model(img_gt)
-        x0 = model.acquistion_model.forward(y, type_calculation="backward")
-        img_hat = model(y, x0=x0)
+        y = model.acquistion_model(img_gt).to(device)
+        x0 = model.acquistion_model.forward(y, type_calculation="backward").to(device)
+        img_hat = model(y, x0=x0).to(device)
         if img_hat.max() > img_hat.min():
             img_hat_norm = (img_hat - img_hat.min()) / (img_hat.max() - img_hat.min())
         else:

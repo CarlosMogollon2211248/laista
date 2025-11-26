@@ -85,13 +85,21 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     ).to(device)
 
     # Optimizador y Función de Pérdida
-    optimizer = torch.optim.Adam(model.parameters(), lr=config['training']['learning_rate'])
+    # optimizer = torch.optim.Adam(model.parameters(), lr=config['training']['learning_rate'])
+    optimizer = torch.optim.Adam(
+        model.parameters(), 
+        lr=config['training']['learning_rate'],
+        weight_decay=config['training']['weight_decay'] 
+        )
     loss_fn = nn.MSELoss()
 
-    # <--- NUEVO: Inicialización del Scheduler
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    #     optimizer, mode='min', factor=0.1, patience=5
+    # )
+    # Inicialización del Scheduler (Ya la tienes bien)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.1, patience=5
-    )
+        optimizer, mode='min', factor=0.1, patience=5 
+        )
 
     # 5. Inicializar Logging (Weights & Biases)
     # ---------------------------------------------

@@ -118,26 +118,21 @@ class Accelerator(nn.Module):
         super(Accelerator, self).__init__()
 
         self.decoder = Decoder(n_channels, bilinear, scaling)
-        self.encoders = nn.ModuleList([Encoder(n_channels, bilinear, scaling) for _ in range(num_iterations)])
-        self.history = []
+        self.encoders = nn.ModuleList([Encoder(n_channels, bilinear, scaling) for _ in range(num_iterations+1)])
+        self.T = num_iterations
 
-    def forward(self, x):
-        # Siempre añade la reconstrucción más reciente
-        self.history.append(x)
+    def forward(self, x, history):
 
-        # Si el historial es demasiado largo, quita el elemento más antiguo
-        if len(self.history) > len(self.encoders): # len(self.encoders) es tu T
-            self.history.pop(0)
+        h = self.encoders[0](x)
 
-        
-        h = 0
-        for i in range(len(self.history)):
-            h_i = self.encoders[i](self.history[i])
-            h = h + h_i  
-        h = h / len(self.history)
+        for i in range(self.T):
+            h_i = self.encoders[i + 1](history[i]) 
+            h = h + h_i 
+
+        h = h / (self.T+1)
 
         v = self.decoder(h)
-        v = v + self.history[-1] 
+
         return v
 
 class Laista(nn.Module):
@@ -208,14 +203,15 @@ class Laista(nn.Module):
             torch.Tensor: La imagen reconstruida.
         """
         
-        self.acc.history = []
-        
         if x0 is None:
             x0 = torch.zeros_like(y)
         
         x = x0
         z = x.clone()
-        
+        initial_x = x.detach().clone() # Usamos una copia desatachada
+        history = [initial_x.clone() for _ in range(self.T)]
+        # history = [x.clone()] * self.T 
+
         errors = []
         psnrs = []
         mses = []
@@ -225,7 +221,12 @@ class Laista(nn.Module):
             x = self.prior.prox(x, self._lambda)
             x.requires_grad_(True)
             # Paso de aceleración aprendido (actualización de z)
-            z = self.acc(x)
+            z = x + self.acc(x, history)
+
+            history.append(x)
+            if len(history) > self.T:
+                history.pop(0)
+
             x_detached = x.detach()
 
             
@@ -235,7 +236,7 @@ class Laista(nn.Module):
             
             if gt is not None:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
-                error = self.fidelity.forward(x, y, self.H)
+                error = self.fidelity.forward(x, y, self.H).detach()
                 errors.append(error.cpu())
                 if x_detached.max() > x_detached.min():
                     x_norm = (x_detached - x_detached.min()) / (x_detached.max() - x_detached.min())
@@ -246,7 +247,7 @@ class Laista(nn.Module):
 
         # Guardar métricas en archivos
         if gt is not None:
-            np.save('metricas/Laista_error.npy', errors)
+            np.save('metricas/Laista_error.npy', np.array([e.cpu().numpy() for e in errors]))
             np.save('metricas/Laista_psnr.npy', psnrs)
             np.save('metricas/Laista_mse.npy', mses)
         # --- Visualización de resultados ---
@@ -257,7 +258,7 @@ class Laista(nn.Module):
             
             # Gráfica del Error de Fidelidad
             plt.figure(figsize=(12, 5))
-            plt.plot(errors, color='b', label='LAISTA Fidelity')
+            plt.plot(np.array([e.detach().cpu().numpy() for e in errors]), color='b', label='LAISTA Fidelity')
             plt.yscale('log')
             plt.ylabel(r'$\frac{1}{2} \|\mathbf{y} - \mathbf{H(x)}\|^2_2$', fontsize=14)
             plt.xlabel(r'Iteración', fontsize=14)

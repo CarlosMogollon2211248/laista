@@ -208,9 +208,9 @@ class Laista(nn.Module):
         
         x = x0
         z = x.clone()
-        initial_x = x.detach().clone() # Usamos una copia desatachada
-        history = [initial_x.clone() for _ in range(self.T)]
-        # history = [x.clone()] * self.T 
+        # initial_x = x.detach().clone() # Usamos una copia desatachada
+        # history = [initial_x.clone() for _ in range(self.T)]
+        history = [x.clone()] * self.T 
 
         errors = []
         psnrs = []

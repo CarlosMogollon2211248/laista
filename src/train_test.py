@@ -34,7 +34,7 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
     psnr_metric = PeakSignalNoiseRatio(data_range=1.0).to(device)
 
     # tqdm crea una barra de progreso para el bucle
-    data_loop = tqdm(dataloader, total=len(dataloader), desc="Training")
+    data_loop = tqdm(dataloader, total=len(dataloader), desc="Training", colour='yellow')
     
     for data in data_loop:
         img_gt = data[0].to(device)
@@ -66,7 +66,7 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
         psnr_meter.update(psnr, img_gt.size(0))
         data_loop.set_postfix({
             'avg_loss': f'{loss_meter.avg:.4f}',
-            'avg_psnr': f'{psnr_meter.avg:.2f} dB'
+            'avg_psnr': f'{psnr_meter.avg:.4f} dB'
             })
 
     return loss_meter.avg, psnr_meter.avg
@@ -80,7 +80,7 @@ def evaluate(model, dataloader, loss_fn, device):
     psnr_meter = AverageMeter()
     psnr_metric = PeakSignalNoiseRatio(data_range=1.0).to(device)
 
-    data_loop = tqdm(dataloader, total=len(dataloader), desc="Evaluating")
+    data_loop = tqdm(dataloader, total=len(dataloader), desc="Evaluating", colour='green')
     
     for data in data_loop:
         img_gt = data[0].to(device)

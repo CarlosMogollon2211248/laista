@@ -6,7 +6,7 @@ seed: 0
 data:
   data_dir: './data'
   batch_size: 32
-  img_size: 32
+  img_size: 128
 
 # Configuración del Modelo de Adquisición (SPC)
 acquisition:
@@ -26,8 +26,8 @@ net_params:
 
 # Parámetros de Entrenamiento
 training:
-  max_epochs: 15
-  learning_rate: 0.0001
+  max_epochs: 150
+  learning_rate: 0.05
   weight_decay: 0.00001
 
 # Logging con W&B

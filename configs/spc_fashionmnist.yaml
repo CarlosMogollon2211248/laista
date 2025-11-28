@@ -5,8 +5,8 @@ seed: 0
 # Configuración de los Datos
 data:
   data_dir: './data'
-  batch_size: 32
-  img_size: 128
+  batch_size: 128
+  img_size: 32
 
 # Configuración del Modelo de Adquisición (SPC)
 acquisition:
@@ -26,11 +26,11 @@ net_params:
 
 # Parámetros de Entrenamiento
 training:
-  max_epochs: 150
+  max_epochs: 2
   learning_rate: 0.05
   weight_decay: 0.00001
 
 # Logging con W&B
 wandb:
   project: 'LAISTA_Project'
-  name: 'Run_FashionMNIST_0.7Ratio_cake_cutting'
+  name: 'Run_FashionMNIST_0.7Ratio_cake_cutting_testing'

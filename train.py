@@ -146,17 +146,21 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
             print(f"--> Nuevo mejor checkpoint guardado en la época {epoch + 1}")
 
     # 7. Evaluación Final en el Test Set
+    # Sección 7. Evaluación Final en el Test Set
     # --------------------------------------
     print("\n--- Entrenamiento finalizado. Evaluando en el Test Set con el mejor modelo. ---")
     checkpoint = torch.load(best_model_path)
     model.load_state_dict(checkpoint['model_state_dict'])
-    
-    test_loss = evaluate(model, test_loader, loss_fn, device)
-    
+
+    # ¡CORRECCIÓN AQUÍ! Desempaquetar la tupla
+    test_loss, test_psnr = evaluate(model, test_loader, loss_fn, device)
+
     print(f"\n===================================================")
-    print(f"RESULTADO FINAL - Test Loss: {test_loss:.6f}")
+    # Usar solo la variable test_loss (que ahora es el float)
+    print(f"RESULTADO FINAL - Test Loss: {test_loss:.6f}, Test PSNR: {test_psnr:.4f} dB")   
     print(f"===================================================")
-    wandb.log({'final_test_loss': test_loss})
+
+    wandb.log({'final_test_loss': test_loss, 'final_test_psnr': test_psnr})
 
     wandb.finish()
 

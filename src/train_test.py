@@ -52,7 +52,7 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
         else:
             img_hat_norm = img_hat # Evitar división por cero
         # 3. Calcular la pérdida
-        loss = loss_fn(img_hat_norm, img_gt)
+        loss = loss_fn(img_hat_norm, img_gt) 
         psnr = psnr_metric(img_hat_norm, img_gt).item()
 
         # 4. Backpropagation (cálculo de gradientes)

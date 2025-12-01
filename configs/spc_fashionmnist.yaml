@@ -26,11 +26,11 @@ net_params:
 
 # Parámetros de Entrenamiento
 training:
-  max_epochs: 2
-  learning_rate: 0.05
+  max_epochs: 100
+  learning_rate: 0.01
   weight_decay: 0.00001
 
 # Logging con W&B
 wandb:
   project: 'LAISTA_Project'
-  name: 'Run_FashionMNIST_0.7Ratio_cake_cutting_testing'
+  name: 'FashionMNIST_0.7Ratio_cc_Exp5'

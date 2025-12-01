@@ -70,10 +70,31 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
 
     fidelity = L2()
     prior = Denoiser({'in_channels': 1, 'out_channels': 1, 'pretrained': "download_lipschitz", 'device': device}).to(device)
-
-    # Congelar los parametros del denoiser
+    # Congelar o descongelar los parametros del denoiser
     for param in prior.parameters():
-        param.requires_grad = False
+        param.requires_grad = True
+
+    total_params = 0
+    trainable_params = 0
+    non_trainable_params = 0
+
+    for name, param in prior.named_parameters():
+        # p.numel() obtiene el número total de elementos (parámetros) en el tensor.
+        num_param = param.numel()
+        total_params += num_param
+
+        if param.requires_grad:
+            trainable_params += num_param
+
+        else:
+            non_trainable_params += num_param
+
+    print("--- Desglose de Parámetros del Denoiser ---")
+    print(f"**Total de Parámetros:** {total_params:,}")
+    print(f"**Parámetros Entrenables:** {trainable_params:,}")
+    print(f"**Parámetros No Entrenables (Congelados):** {non_trainable_params:,}")
+    print(f"**Porcentaje Entrenable:** {trainable_params / total_params * 100:.2f}%")
+
 
     model = Laista(
         acquistion_model=acquisition_model,
@@ -83,6 +104,27 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
         **config['net_params'],
         device= device
     ).to(device)
+
+    total_params = 0
+    trainable_params = 0
+    non_trainable_params = 0
+
+    for name, param in model.named_parameters():
+        # p.numel() obtiene el número total de elementos (parámetros) en el tensor.
+        num_param = param.numel()
+        total_params += num_param
+
+        if param.requires_grad:
+            trainable_params += num_param
+
+        else:
+            non_trainable_params += num_param
+
+    print("--- Desglose de Parámetros del Modelo ---")
+    print(f"**Total de Parámetros:** {total_params:,}")
+    print(f"**Parámetros Entrenables:** {trainable_params:,}")
+    print(f"**Parámetros No Entrenables :** {non_trainable_params:,}")
+    print(f"**Porcentaje Entrenable:** {trainable_params / total_params * 100:.2f}%")
 
     # Optimizador y Función de Pérdida
     # optimizer = torch.optim.Adam(model.parameters(), lr=config['training']['learning_rate'])

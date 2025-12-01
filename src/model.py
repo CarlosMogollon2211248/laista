@@ -34,14 +34,14 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.bilinear = bilinear
         factor = 2 if bilinear else 1
-        self.up1 = (Up(256 * scaling, 128 * scaling // factor, bilinear))
+        # self.up1 = (Up(256 * scaling, 128 * scaling // factor, bilinear))
         self.up2 = (Up(128 * scaling, 64 * scaling // factor, bilinear))
         self.up3 = (Up(64 * scaling, 32 * scaling // factor, bilinear))
         self.up4 = (Up(32 * scaling, 16 * scaling, bilinear))
         self.outc = (OutConv(16 * scaling, n_channels))
 
     def forward(self, x):
-        x = self.up1(x)
+        # x = self.up1(x)
         x = self.up2(x)
         x = self.up3(x)
         x = self.up4(x)
@@ -66,18 +66,19 @@ class Encoder(nn.Module):
         self.inc = (DoubleConv(n_channels, 16 * scaling))
         self.down1 = (Down(16 * scaling, 32 * scaling))
         self.down2 = (Down(32 * scaling, 64 * scaling))
-        self.down3 = (Down(64 * scaling, 128 * scaling))
         factor = 2 if bilinear else 1
-        self.down4 = (Down(128 * scaling, 256 * scaling // factor))
+        self.down3 = (Down(64 * scaling, 128 * scaling // factor))
+        # factor = 2 if bilinear else 1
+        # self.down4 = (Down(128 * scaling, 256 * scaling // factor))
 
     def forward(self, x):
         x1 = self.inc(x)
         x2 = self.down1(x1)
         x3 = self.down2(x2)
         x4 = self.down3(x3)
-        x5 = self.down4(x4)
+        # x5 = self.down4(x4)
 
-        return x5
+        return x4
 
 class DoubleConv(nn.Module):
     """(convolution => [BN] => ReLU) * 2"""
@@ -118,17 +119,23 @@ class Accelerator(nn.Module):
         super(Accelerator, self).__init__()
 
         self.decoder = Decoder(n_channels, bilinear, scaling)
-        self.encoders = nn.ModuleList([Encoder(n_channels, bilinear, scaling) for _ in range(num_iterations+1)])
+        self.encoder_shared = Encoder(n_channels, bilinear, scaling)
+        # self.encoders = nn.ModuleList([Encoder(n_channels, bilinear, scaling) for _ in range(num_iterations+1)])
         self.T = num_iterations
 
     def forward(self, x, history):
 
-        h = self.encoders[0](x)
+        #h = self.encoders[0](x)
 
-        for i in range(self.T):
-            h_i = self.encoders[i + 1](history[i]) 
-            h = h + h_i 
+        # for i in range(self.T):
+            # h_i = self.encoders[i + 1](history[i]) 
+            # h = h + h_i 
+        h = self.encoder_shared(x)
 
+        for h_prev in history:
+            h_i = self.encoder_shared(h_prev)
+            h = h + h_i
+            
         h = h / (self.T+1)
 
         v = self.decoder(h)
@@ -208,6 +215,7 @@ class Laista(nn.Module):
         
         x = x0
         z = x.clone()
+        
         # initial_x = x.detach().clone() # Usamos una copia desatachada
         # history = [initial_x.clone() for _ in range(self.T)]
         history = [x.clone()] * self.T 
@@ -217,12 +225,15 @@ class Laista(nn.Module):
         mses = []
         for i in range(self.max_iters):
             # Paso de gradiente y proximal (actualización de x)
+            # x.requires_grad_(True)
             x = z - self.alpha * self.fidelity.grad(z, y, self.H)
             x = self.prior.prox(x, self._lambda)
             x.requires_grad_(True)
             # Paso de aceleración aprendido (actualización de z)
             z = x + self.acc(x, history)
-
+            # z = self.prior.prox(z, self._lambda)
+            # z.requires_grad_(True)
+            
             history.append(x)
             if len(history) > self.T:
                 history.pop(0)

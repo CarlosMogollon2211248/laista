@@ -8,8 +8,10 @@ Demo FISTA/ISTA. Sirve tanto para el ISTA como para el FISTA, lo unico a cambiar
 # Select Working Directory and Device
 # -----------------------------------------------
 import os
-
+import random
+import yaml
 from torch.utils import data
+import numpy as np
 
 print("Current Working Directory ", os.getcwd())
 
@@ -38,27 +40,47 @@ else:
 # %%
 # Load dataset
 # -----------------------------------------------
-from colibri.data.datasets import CustomDataset
+
+from src.dataset import get_dataloaders
 
 name = "fashion_mnist"
 path = "."
 batch_size = 32
 
-
-dataset = CustomDataset(name, path)
-dataset_loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
-
 acquisition_name = 'spc'  # ['spc', 'cassi']
+
+def set_seed(seed):
+    """Fija las semillas de aleatoriedad para que los experimentos sean reproducibles."""
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    # Estas dos últimas líneas aseguran un comportamiento determinista en CUDA
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+config_path='configs/spc_fashionmnist.yaml'
+
+with open(config_path, 'r') as f:
+    config = yaml.safe_load(f)
+
+set_seed(config['seed'])
 
 # %%
 # Visualize dataset
 # -----------------------------------------------
 from torchvision.utils import make_grid
 
-datos = next(iter(dataset_loader))
-sample = datos["input"][17]
-# print(sample.shape)
-sample = sample.unsqueeze(0).to(device)
+train_loader, val_loader, test_loader = get_dataloaders(
+    batch_size=config['data']['batch_size'],
+    img_size=config['data']['img_size']
+    )
+sample = next(iter(test_loader))[0].to(device)[:1]
+print(sample.shape)
+# datos = next(iter(dataset_loader))
+# sample = datos["input"][17]
+# # print(sample.shape)
+# sample = sample.unsqueeze(0).to(device)
 # print(sample.shape)
 # %%
 # Optics forward model
@@ -68,7 +90,7 @@ from colibri.optics import SPC, SD_CASSI, DD_CASSI, C_CASSI
 
 img_size = sample.shape[1:]
 _, M, N = img_size
-print(img_size)
+# print(img_size)
 acquisition_config = dict(
     input_shape=img_size,
 )
@@ -141,17 +163,15 @@ algo_params = {
 
 fidelity = L2()
 # prior = Sparsity(basis="dct")
-
-# SELECCIONAR ALGORITMO
-# fista = Fista(acquisition_model, fidelity, prior, **algo_params)
-
 prior = Denoiser({'in_channels': 1, 'out_channels': 1, 'pretrained': "download_lipschitz", 'device': device}).to(device)
 
-ista = Ista(acquisition_model, fidelity, prior, **algo_params)
+# SELECCIONAR ALGORITMO
+fista = Fista(acquisition_model, fidelity, prior, **algo_params)
+# ista = Ista(acquisition_model, fidelity, prior, **algo_params)
 
 x0 = acquisition_model.forward(y, type_calculation="backward")
-# x_hat = fista(y, gt=sample, x0=x0, verbose=True)
-x_hat = ista(y, gt=sample, x0=x0, verbose=True)
+x_hat = fista(y, gt=sample, x0=x0, verbose=True)
+# x_hat = ista(y, gt=sample, x0=x0, verbose=True)
 
 basis = DCT2D()
 
@@ -192,3 +212,4 @@ plt.yticks([])
 plt.show()
 
 # %%
+

@@ -83,7 +83,7 @@ class Fista(nn.Module):
         errors = []
         psnrs = []
         mses = []
-        for i in tqdm(range(self.max_iters)):
+        for i in tqdm(range(self.max_iters), colour='green'):
             x_old = x.clone()
 
             # gradient step

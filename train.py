@@ -159,7 +159,7 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     os.makedirs(checkpoints_dir, exist_ok=True)
     best_model_path = os.path.join(checkpoints_dir, f"best_model_{config['wandb']['name']}.pth")
 
-    '''for epoch in range(config['training']['max_epochs']):
+    for epoch in range(config['training']['max_epochs']):
         print(f"\n--- Epoch {epoch+1}/{config['training']['max_epochs']} ---")
         
         train_loss, train_psnr = train_one_epoch(model, train_loader, optimizer, loss_fn, device)
@@ -192,23 +192,24 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     # --------------------------------------
     print("\n--- Entrenamiento finalizado. Evaluando en el Test Set con el mejor modelo. ---")
     checkpoint = torch.load(best_model_path)
-    model.load_state_dict(checkpoint['model_state_dict'])'''
-    checkpoint = torch.load(best_model_path)
     model.load_state_dict(checkpoint['model_state_dict'])
+
+    # checkpoint = torch.load(best_model_path)
+    # model.load_state_dict(checkpoint['model_state_dict'])
     # ¡CORRECCIÓN AQUÍ! Desempaquetar la tupla
-    sample = next(iter(test_loader))[0].to(device)
-    y = acquisition_model(sample,type_calculation='forward')
-    x0 = acquisition_model(y,type_calculation='backward')
-    x_hat = model(y, x0=x0, gt=sample, verbose=True)
+    # sample = next(iter(test_loader))[0].to(device)[0:1]#.unsqueeze(0)
+    # y = acquisition_model(sample,type_calculation='forward')
+    # x0 = acquisition_model(y,type_calculation='backward')
+    # x_hat = model(y, x0=x0, gt=sample, verbose=True)
 
-    #test_loss, test_psnr = evaluate(model, test_loader, loss_fn, device)
+    test_loss, test_psnr = evaluate(model, test_loader, loss_fn, device)
 
-    '''    print(f"\n===================================================")
+    print(f"\n===================================================")
     # Usar solo la variable test_loss (que ahora es el float)
     print(f"RESULTADO FINAL - Test Loss: {test_loss:.6f}, Test PSNR: {test_psnr:.4f} dB")   
     print(f"===================================================")
 
-    wandb.log({'final_test_loss': test_loss, 'final_test_psnr': test_psnr})'''
+    wandb.log({'final_test_loss': test_loss, 'final_test_psnr': test_psnr})
 
     wandb.finish()
 

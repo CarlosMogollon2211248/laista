@@ -33,4 +33,4 @@ training:
 # Logging con W&B
 wandb:
   project: 'LAISTA_Project'
-  name: 'FashionMNIST_0.7Ratio_cc_Exp6'
+  name: 'FashionMNIST_0.7Ratio_cc_Exp7'

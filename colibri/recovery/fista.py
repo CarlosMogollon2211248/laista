@@ -60,9 +60,9 @@ class Fista(nn.Module):
         self.max_iters = max_iters
         self.alpha = alpha
         self._lambda = _lambda
+        self.norm = lambda x: torch.linalg.norm(x.flatten(start_dim=1), ord=2, dim=-1)
 
-
-    def forward(self, y, gt=None, x0=None, verbose=False):
+    def forward(self, y, gt=None, x0=None, verbose=False, ratio=None):
         r"""Runs the FISTA algorithm to solve the optimization problem.
 
         Args:
@@ -83,6 +83,13 @@ class Fista(nn.Module):
         errors = []
         psnrs = []
         mses = []
+        convergence_rates = []
+
+        if gt is not None:
+            # Usamos torch.linalg.norm() para la norma Euclidiana (L2)
+            error_prev = self.norm(x - gt)
+            # --------------------------------------
+
         for i in tqdm(range(self.max_iters), colour='green'):
             x_old = x.clone()
 
@@ -97,6 +104,24 @@ class Fista(nn.Module):
             t = (1 + (1 + 4 * t_old**2) ** 0.5) / 2
             z = x + ((t_old - 1) / t) * (x - x_old)
 
+            # --- CÁLCULO DE LA TASA DE CONVERGENCIA ---
+            if gt is not None:
+                # Error actual (numerador): ||x_l - x*||
+                error_curr = self.norm(x - gt) 
+        
+                # Tasa de convergencia: r(l) = ||x_l - x*|| / ||x_{l-1} - x*||
+                # Evitamos la división por cero si el error_prev es 0.
+                if error_prev.item() != 0:
+                    rate = (error_curr / error_prev).item()
+                    convergence_rates.append(rate)
+                else:
+                    # Si el error anterior era 0, el modelo ya convergió
+                    convergence_rates.append(0.0) 
+
+                # Actualizar el error anterior para la próxima iteración
+                error_prev = error_curr
+                # ------------------------------------------
+
             error = self.fidelity.forward(x, y, self.H).item()
             errors.append(error)
             if gt is not None:
@@ -107,8 +132,14 @@ class Fista(nn.Module):
         np.save('metricas/Fista_error.npy', errors)
 
         if gt is not None:
-            np.save('metricas/Fista_psnr.npy', psnrs)
-            np.save('metricas/Fista_mse.npy', mses)
+            if ratio is not None:
+                np.save(f'metricas/Fista_psnr{ratio}.npy', psnrs)
+                np.save(f'metricas/Fista_mse{ratio}.npy', mses)
+                np.save(f'metricas/Fista_convergence_rate{ratio}.npy', convergence_rates) 
+            else:
+                np.save(f'metricas/Fista_psnr.npy', psnrs)
+                np.save(f'metricas/Fista_mse.npy', mses)
+                np.save(f'metricas/Fista_convergence_rate.npy', convergence_rates) 
 
         if verbose:
             if gt is not None:
@@ -136,4 +167,11 @@ class Fista(nn.Module):
                 plt.xlabel(r'Iteration', fontsize=14)
                 plt.grid('on')
                 plt.legend(fontsize=14)
+
+                plt.figure()
+                plt.plot(convergence_rates, color = 'g', label = 'FISTA Convergence Rate')
+                plt.ylabel(r'$r(l)$', fontsize=14)
+                plt.xlabel(r'Iteration', fontsize=14)
+                plt.grid('on')
+                plt.legend(fontsize=14)                
         return x

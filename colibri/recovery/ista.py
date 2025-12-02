@@ -55,9 +55,9 @@ class Ista(nn.Module):
         self.max_iters = max_iters
         self.alpha = alpha
         self._lambda = _lambda
+        self.norm = lambda x: torch.linalg.norm(x.flatten(start_dim=1), ord=2, dim=-1)
 
-
-    def forward(self, y, gt=None, x0=None, verbose=False):
+    def forward(self, y, gt=None, x0=None, verbose=False, ratio=None):
         r"""Runs the ISTA algorithm to solve the optimization problem.
 
         Args:
@@ -74,6 +74,13 @@ class Ista(nn.Module):
         errors = []
         psnrs = []
         mses = []
+        convergence_rates = []
+
+        if gt is not None:
+            # Usamos torch.linalg.norm() para la norma Euclidiana (L2)
+            error_prev = self.norm(x - gt)
+            # --------------------------------------
+
         for i in range(self.max_iters):
 
             x_old = x.clone()
@@ -83,7 +90,25 @@ class Ista(nn.Module):
 
             # proximal step
             x = self.prior.prox(x, self._lambda)
-            
+
+            # --- CÁLCULO DE LA TASA DE CONVERGENCIA ---
+            if gt is not None:
+                # Error actual (numerador): ||x_l - x*||
+                error_curr = self.norm(x - gt) 
+        
+                # Tasa de convergencia: r(l) = ||x_l - x*|| / ||x_{l-1} - x*||
+                # Evitamos la división por cero si el error_prev es 0.
+                if error_prev.item() != 0:
+                    rate = (error_curr / error_prev).item()
+                    convergence_rates.append(rate)
+                else:
+                    # Si el error anterior era 0, el modelo ya convergió
+                    convergence_rates.append(0.0) 
+
+                # Actualizar el error anterior para la próxima iteración
+                error_prev = error_curr
+                # ------------------------------------------
+
             error = self.fidelity.forward(x, y, self.H).item()
             errors.append(error)
             if gt is not None:
@@ -94,8 +119,14 @@ class Ista(nn.Module):
         np.save('metricas/Ista_error.npy', errors)
 
         if gt is not None:
-            np.save('metricas/Ista_psnr.npy', psnrs)
-            np.save('metricas/Ista_mse.npy', mses)
+            if ratio is not None:
+                np.save(f'metricas/Ista_psnr{ratio}.npy', psnrs)
+                np.save(f'metricas/Ista_mse{ratio}.npy', mses)
+                np.save(f'metricas/Ista_convergence_rate{ratio}.npy', convergence_rates) 
+            else:
+                np.save(f'metricas/Ista_psnr.npy', psnrs)
+                np.save(f'metricas/Ista_mse.npy', mses)
+                np.save(f'metricas/Ista_convergence_rate.npy', convergence_rates) 
 
         if verbose:
             if gt is not None:
@@ -123,5 +154,12 @@ class Ista(nn.Module):
                 plt.xlabel(r'Iteration', fontsize=14)
                 plt.grid('on')
                 plt.legend(fontsize=14)
+
+                plt.figure()
+                plt.plot(convergence_rates, color = 'g', label = 'ISTA Convergence Rate')
+                plt.ylabel(r'$r(l)$', fontsize=14)
+                plt.xlabel(r'Iteration', fontsize=14)
+                plt.grid('on')
+                plt.legend(fontsize=14)  
 
         return x

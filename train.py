@@ -69,6 +69,7 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     acquisition_model = SPC(**acquisition_config).to(device)
 
     fidelity = L2()
+    # prior = Sparsity(basis="dct")
     prior = Denoiser({'in_channels': 1, 'out_channels': 1, 'pretrained': "download_lipschitz", 'device': device}).to(device)
     # Congelar o descongelar los parametros del denoiser
     for param in prior.parameters():

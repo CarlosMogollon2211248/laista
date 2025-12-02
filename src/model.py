@@ -135,7 +135,7 @@ class Accelerator(nn.Module):
         for h_prev in history:
             h_i = self.encoder_shared(h_prev)
             h = h + h_i
-            
+
         h = h / (self.T+1)
 
         v = self.decoder(h)
@@ -296,4 +296,4 @@ class Laista(nn.Module):
             plt.tight_layout()
             plt.show()
             
-        return z
+        return x

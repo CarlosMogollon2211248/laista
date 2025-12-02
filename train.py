@@ -8,7 +8,7 @@ import torch.nn as nn
 import wandb
 
 # --- Modulos del proyecto ---
-from src.dataset import get_dataloaders
+from src.dataset import get_dataloaders, get_convergence_dataloaders
 from src.model import Laista
 from src.train_test import evaluate, train_one_epoch
 from src.utils import get_hadamard_patterns  # Importamos la función para los patrones
@@ -44,13 +44,17 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     set_seed(config['seed'])
     device = torch.device(config['device'] if torch.cuda.is_available() else 'cpu')
     print(f"Usando dispositivo: {device}")
-
+    LAMBDA_CONVERGENCE = 1e-3
     # 3. Preparar los Datos
     # -----------------------
-    train_loader, val_loader, test_loader = get_dataloaders(
-        batch_size=config['data']['batch_size'],
-        img_size=config['data']['img_size']
-    )
+    # train_loader, val_loader, test_loader = get_dataloaders(
+    #     batch_size=config['data']['batch_size'],
+    #     img_size=config['data']['img_size']
+    # )
+    train_loader, val_loader, test_loader = get_convergence_dataloaders(
+        config, 
+        R_star_path='FISTA_optimal_convergence_R_star.npy' # Ajusta la ruta si es necesario
+        )
 
     # 4. Preparar Modelos y Optimizador
     # --------------------------------------
@@ -134,7 +138,7 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
         lr=config['training']['learning_rate'],
         weight_decay=config['training']['weight_decay'] 
         )
-    loss_fn = nn.MSELoss()
+    loss_fn = nn.MSELoss(reduction='none')
 
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
     #     optimizer, mode='min', factor=0.1, patience=5
@@ -163,8 +167,8 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     for epoch in range(config['training']['max_epochs']):
         print(f"\n--- Epoch {epoch+1}/{config['training']['max_epochs']} ---")
         
-        train_loss, train_psnr = train_one_epoch(model, train_loader, optimizer, loss_fn, device)
-        val_loss, val_psnr = evaluate(model, val_loader, loss_fn, device)
+        train_loss, train_psnr = train_one_epoch(model, train_loader, optimizer, loss_fn, device, LAMBDA_CONVERGENCE)
+        val_loss, val_psnr = evaluate(model, val_loader, loss_fn, device, LAMBDA_CONVERGENCE)
         
         scheduler.step(val_loss)
         current_lr = optimizer.param_groups[0]['lr']

@@ -197,7 +197,7 @@ class Laista(nn.Module):
             self.acc = Accelerator(self.T, self.n_channels)
         self.norm = lambda x: torch.linalg.norm(x.flatten(start_dim=1), ord=2, dim=-1)
 
-    def forward(self, y, gt=None, x0=None, ratio=None, verbose=False):
+    def forward(self, y, gt=None, x0=None, ratio=None, verbose=False, return_rates_matrix=False):
         r"""
         Ejecuta el algoritmo LAISTA.
 
@@ -261,12 +261,12 @@ class Laista(nn.Module):
                 # Tasa de convergencia: r(l) = ||x_l - x*|| / ||x_{l-1} - x*||
                 # Evitamos la división por cero si el error_prev es 0.
                 rate = (error_curr / error_prev)
-                convergence_rates.append(rate)
+                convergence_rates.append(rate.cpu())
                 # Actualizar el error anterior para la próxima iteración
                 error_prev = error_curr
                 # ------------------------------------------
             
-            if gt is not None:
+            if gt is not None and return_rates_matrix==False:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
                 error = self.fidelity.forward(x, y, self.H).detach()
                 errors.append(error.cpu())
@@ -274,12 +274,12 @@ class Laista(nn.Module):
                     x_norm = (x_detached - x_detached.min()) / (x_detached.max() - x_detached.min())
                 else:
                     x_norm = x_detached
-                psnrs.append(psnr(gt, x_norm).cpu())
+                psnrs.append(psnr(gt, x_norm, data_range=1.0).cpu())
                 mses.append(mse(gt, x_norm).cpu())
                 changes_vectors.append(self.norm(x-x_old).cpu())
 
         # Guardar métricas en archivos
-        if gt is not None:
+        if gt is not None and return_rates_matrix==False:
             if ratio is not None:
                 np.save(f'metricas/Laista_psnr{ratio}.npy', psnrs)
                 np.save(f'metricas/Laista_mse{ratio}.npy', mses)
@@ -325,5 +325,10 @@ class Laista(nn.Module):
 
             plt.tight_layout()
             plt.show()
-            
-        return x
+        stacked_rates = torch.stack(convergence_rates)
+        R_LAISTA_matrix = stacked_rates.T.contiguous()
+        R_LAISTA_matrix = R_LAISTA_matrix.to(self.device)
+        if return_rates_matrix == True:
+            return z, R_LAISTA_matrix
+        else:
+            return z   

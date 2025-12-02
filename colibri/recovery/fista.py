@@ -62,7 +62,7 @@ class Fista(nn.Module):
         self._lambda = _lambda
         self.norm = lambda x: torch.linalg.norm(x.flatten(start_dim=1), ord=2, dim=-1)
 
-    def forward(self, y, gt=None, x0=None, verbose=False, ratio=None):
+    def forward(self, y, gt=None, x0=None, verbose=False, ratio=None, return_rates_matrix=False):
         r"""Runs the FISTA algorithm to solve the optimization problem.
 
         Args:
@@ -113,7 +113,7 @@ class Fista(nn.Module):
                 # Tasa de convergencia: r(l) = ||x_l - x*|| / ||x_{l-1} - x*||
                 # Evitamos la división por cero si el error_prev es 0.
                 rate = (error_curr / error_prev)
-                convergence_rates.append(rate)
+                convergence_rates.append(rate.cpu())
 
 
                 # Actualizar el error anterior para la próxima iteración
@@ -121,11 +121,11 @@ class Fista(nn.Module):
                 # ------------------------------------------
 
             error = self.fidelity.forward(x, y, self.H)
-            errors.append(error)
+            errors.append(error.cpu())
             if gt is not None:
-                psnrs.append(psnr(gt, x_old, data_range=1.0))
-                mses.append(mse(gt, x_old))
-                changes_vectors.append(self.norm(x-x_old))
+                psnrs.append(psnr(gt, x_old, data_range=1.0).cpu())
+                mses.append(mse(gt, x_old).cpu())
+                changes_vectors.append(self.norm(x-x_old).cpu())
 
         # Graficar y guardar el error
         np.save('metricas/Fista_error.npy', errors)
@@ -175,4 +175,7 @@ class Fista(nn.Module):
                 plt.xlabel(r'Iteration', fontsize=14)
                 plt.grid('on')
                 plt.legend(fontsize=14)                
-        return x
+        if return_rates_matrix == True:
+            return x, convergence_rates
+        else:
+            return x

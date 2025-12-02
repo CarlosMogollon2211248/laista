@@ -3,6 +3,7 @@
 import torch
 from tqdm import tqdm
 from torchmetrics import PeakSignalNoiseRatio
+import torch.nn as nn
 
 # --- Clase de Ayuda para promediar métricas ---
 # (Más adelante puedes mover esto a src/utils.py)
@@ -24,7 +25,9 @@ class AverageMeter:
         self.avg = self.sum / self.count
 # -----------------------------------------------
 
-def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
+convergence_loss_fn = nn.MSELoss(reduction='mean')
+
+def train_one_epoch(model, dataloader, optimizer, loss_fn, device, lambda_reg):
     """
     Ejecuta una época completa de entrenamiento.
     """
@@ -38,14 +41,16 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
     
     for data in data_loop:
         img_gt = data[0].to(device)
-        
+        R_vector_gt = data[1].to(device)
+
         # 1. Poner a cero los gradientes
         optimizer.zero_grad()
         
         # 2. Forward pass completo del modelo
         y = model.acquistion_model(img_gt)
         x0 = model.acquistion_model.forward(y, type_calculation="backward")
-        img_hat = model(y, x0=x0)
+        img_hat, R_LAISTA = model(y, x0=x0, gt=img_gt, return_rates_matrix=True)
+        # img_hat = model(y, x0=x0)
 
         if img_hat.max() > img_hat.min():
             img_hat_norm = (img_hat - img_hat.min()) / (img_hat.max() - img_hat.min())
@@ -54,15 +59,18 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
         # 3. Calcular la pérdida
         loss = loss_fn(img_hat_norm, img_gt) 
         psnr = psnr_metric(img_hat_norm, img_gt).item()
-
+        loss_per_sample = loss.mean(dim=[1, 2, 3])
+        loss_convergence_reg = convergence_loss_fn(R_LAISTA, R_vector_gt)
+        loss_total = loss_per_sample.mean() + lambda_reg*loss_convergence_reg
         # 4. Backpropagation (cálculo de gradientes)
-        loss.backward()
+        loss_total.backward()
         
         # 5. Actualizar los pesos del modelo
         optimizer.step()
         
         # Actualizar y mostrar métricas
-        loss_meter.update(loss.item(), img_gt.size(0))
+        loss_meter.update(loss_total.item(), img_gt.size(0))
+        #loss_meter.update(loss.item(), img_gt.size(0))
         psnr_meter.update(psnr, img_gt.size(0))
         data_loop.set_postfix({
             'avg_loss': f'{loss_meter.avg:.4f}',
@@ -71,7 +79,7 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device):
 
     return loss_meter.avg, psnr_meter.avg
 
-def evaluate(model, dataloader, loss_fn, device):
+def evaluate(model, dataloader, loss_fn, device, lambda_reg):
     """
     Ejecuta una época completa de evaluación/validación.
     """
@@ -84,11 +92,13 @@ def evaluate(model, dataloader, loss_fn, device):
     
     for data in data_loop:
         img_gt = data[0].to(device)
-        
+        R_vector_gt = data[1].to(device)
+
         # Forward pass completo
         y = model.acquistion_model(img_gt)
         x0 = model.acquistion_model.forward(y, type_calculation="backward")
-        img_hat = model(y, x0=x0)
+        img_hat, R_LAISTA = model(y, x0=x0, gt=img_gt, return_rates_matrix=True)
+        # img_hat = model(y, x0=x0)
         if img_hat.max() > img_hat.min():
             img_hat_norm = (img_hat - img_hat.min()) / (img_hat.max() - img_hat.min())
         else:
@@ -97,8 +107,12 @@ def evaluate(model, dataloader, loss_fn, device):
         loss = loss_fn(img_hat_norm, img_gt)
         psnr = psnr_metric(img_hat_norm, img_gt).item()
 
+        loss_per_sample = loss.mean(dim=[1, 2, 3])
+        loss_convergence_reg = convergence_loss_fn(R_LAISTA, R_vector_gt)
+        loss_total = loss_per_sample.mean() + lambda_reg*loss_convergence_reg
+
         # Actualizar y mostrar métricas
-        loss_meter.update(loss.item(), img_gt.size(0))
+        loss_meter.update(loss_total.item(), img_gt.size(0))
         psnr_meter.update(psnr, img_gt.size(0))
         data_loop.set_postfix({
             'avg_loss': f'{loss_meter.avg:.4f}',

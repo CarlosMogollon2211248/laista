@@ -75,7 +75,7 @@ train_loader, val_loader, test_loader = get_dataloaders(
     batch_size=config['data']['batch_size'],
     img_size=config['data']['img_size']
     )
-sample = next(iter(test_loader))[0].to(device)[:1]
+sample = next(iter(test_loader))[0].to(device)
 print(sample.shape)
 # datos = next(iter(dataset_loader))
 # sample = datos["input"][17]
@@ -95,9 +95,9 @@ acquisition_config = dict(
     input_shape=img_size,
 )
 
-ratio = 1 
+ratio = 0.7
 if acquisition_name == "spc":
-    n_measurements = int(ratio*(28**2))
+    n_measurements = int(ratio*(32**2))
     print('numero mediciones', n_measurements)
     n_measurements_sqrt = int(math.sqrt(n_measurements))
     target_size = n_measurements_sqrt ** 2 
@@ -170,8 +170,8 @@ fista = Fista(acquisition_model, fidelity, prior, **algo_params)
 # ista = Ista(acquisition_model, fidelity, prior, **algo_params)
 
 x0 = acquisition_model.forward(y, type_calculation="backward")
-x_hat = fista(y, gt=sample, x0=x0, verbose=True)
-# x_hat = ista(y, gt=sample, x0=x0, verbose=True)
+x_hat = fista(y, gt=sample, x0=x0, ratio=ratio, verbose=True)
+# x_hat = ista(y, gt=sample, x0=x0, ratio=ratio, verbose=True)
 
 basis = DCT2D()
 

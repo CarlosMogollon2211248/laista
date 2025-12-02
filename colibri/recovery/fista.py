@@ -84,6 +84,7 @@ class Fista(nn.Module):
         psnrs = []
         mses = []
         convergence_rates = []
+        changes_vectors = []
 
         if gt is not None:
             # Usamos torch.linalg.norm() para la norma Euclidiana (L2)
@@ -111,22 +112,20 @@ class Fista(nn.Module):
         
                 # Tasa de convergencia: r(l) = ||x_l - x*|| / ||x_{l-1} - x*||
                 # Evitamos la división por cero si el error_prev es 0.
-                if error_prev.item() != 0:
-                    rate = (error_curr / error_prev).item()
-                    convergence_rates.append(rate)
-                else:
-                    # Si el error anterior era 0, el modelo ya convergió
-                    convergence_rates.append(0.0) 
+                rate = (error_curr / error_prev)
+                convergence_rates.append(rate)
+
 
                 # Actualizar el error anterior para la próxima iteración
                 error_prev = error_curr
                 # ------------------------------------------
 
-            error = self.fidelity.forward(x, y, self.H).item()
+            error = self.fidelity.forward(x, y, self.H)
             errors.append(error)
             if gt is not None:
-                psnrs.append(psnr(gt, x_old).item())
-                mses.append(mse(gt, x_old).item())
+                psnrs.append(psnr(gt, x_old, data_range=1.0))
+                mses.append(mse(gt, x_old))
+                changes_vectors.append(self.norm(x-x_old))
 
         # Graficar y guardar el error
         np.save('metricas/Fista_error.npy', errors)
@@ -136,15 +135,17 @@ class Fista(nn.Module):
                 np.save(f'metricas/Fista_psnr{ratio}.npy', psnrs)
                 np.save(f'metricas/Fista_mse{ratio}.npy', mses)
                 np.save(f'metricas/Fista_convergence_rate{ratio}.npy', convergence_rates) 
+                np.save(f'metricas/Fista_change_vector{ratio}.npy', changes_vectors) 
             else:
                 np.save(f'metricas/Fista_psnr.npy', psnrs)
                 np.save(f'metricas/Fista_mse.npy', mses)
                 np.save(f'metricas/Fista_convergence_rate.npy', convergence_rates) 
+                np.save(f'metricas/Fista_change_vector.npy', changes_vectors) 
 
         if verbose:
             if gt is not None:
-                print(f'PSNR: {psnrs[-1]}')
-                print(f'MSE: {mses[-1]}')
+                print(f'PSNR 1 sample: {np.array(psnrs)[:,0][-1]}')
+                print(f'MSE 1 sample: {np.array(mses)[:,0][-1]}')
             plt.figure()
             plt.plot(errors, color = 'r', label = 'FISTA Fidelity')
             plt.yscale('log')

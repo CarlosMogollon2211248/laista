@@ -18,7 +18,7 @@ def psnr(y_true, y_pred, data_range=None):
     Returns:
         PSNR between y_true and y_pred.
     """
-    return peak_signal_noise_ratio(y_pred, y_true, data_range=data_range)
+    return peak_signal_noise_ratio(y_pred, y_true, data_range=data_range, reduction=None, dim=[1, 2, 3])
 
 def ssim(y_true, y_pred, data_range=None):
     """Calculate Structural Similarity Index between y_true and y_pred.
@@ -33,13 +33,22 @@ def ssim(y_true, y_pred, data_range=None):
     return structural_similarity_index_measure(y_pred, y_true, data_range=data_range)
 
 def mse(y_true, y_pred):
-    """Calculate Mean Squared Error between y_true and y_pred."""
+    """
+    Calcula el Mean Squared Error (MSE) por imagen (vector de [Batch_Size])
+    usando operaciones nativas de PyTorch.
+    """
     
-    # Aseguramos que los tensores sean contiguos en memoria antes de calcular el MSE
+    # 1. Asegurar contigüidad (opcional, pero buena práctica)
     y_true_cont = y_true.contiguous()
     y_pred_cont = y_pred.contiguous()
     
-    return mean_squared_error(y_pred_cont, y_true_cont)
+    # 2. Calcular el error al cuadrado (operación elemento por elemento)
+    diff_squared = (y_pred_cont - y_true_cont) ** 2
+    
+    # 3. Promediar solo sobre las dimensiones de la imagen: C (1), H (2), W (3).
+    # Esto deja la dimensión del Batch (0) intacta.
+    # El resultado será un tensor de shape [Batch_Size] (ej. [128]).
+    return torch.mean(diff_squared, dim=[1, 2, 3])
 
 def mae(y_true, y_pred):
     """Calculate Mean Absolute Error between y_true and y_pred.

@@ -195,8 +195,9 @@ class Laista(nn.Module):
             self.acc = Accelerator(self.T, self.n_channels).to(device)
         else:
             self.acc = Accelerator(self.T, self.n_channels)
+        self.norm = lambda x: torch.linalg.norm(x.flatten(start_dim=1), ord=2, dim=-1)
 
-    def forward(self, y, gt=None, x0=None, verbose=False):
+    def forward(self, y, gt=None, x0=None, ratio=None, verbose=False):
         r"""
         Ejecuta el algoritmo LAISTA.
 
@@ -223,14 +224,23 @@ class Laista(nn.Module):
         errors = []
         psnrs = []
         mses = []
+        convergence_rates = []
+        changes_vectors = []
+
+        if gt is not None:
+            # Usamos torch.linalg.norm() para la norma Euclidiana (L2)
+            error_prev = self.norm(x - gt)
+            # --------------------------------------
+
         for i in range(self.max_iters):
+            x_old = x.clone()
             # Paso de gradiente y proximal (actualización de x)
             # x.requires_grad_(True)
             x = z - self.alpha * self.fidelity.grad(z, y, self.H)
             x = self.prior.prox(x, self._lambda)
             x.requires_grad_(True)
             # Paso de aceleración aprendido (actualización de z)
-            z = x + self.acc(x, history)
+            z = x + self.acc(x_old, history)
             # z = self.prior.prox(z, self._lambda)
             # z.requires_grad_(True)
             
@@ -242,8 +252,19 @@ class Laista(nn.Module):
 
             
 
-            # --- Cálculo y almacenamiento de métricas (igual que en ISTA) ---
-            # 
+            # --- Cálculo y almacenamiento de métricas ---
+
+            # --- CÁLCULO DE LA TASA DE CONVERGENCIA ---
+            if gt is not None:
+                # Error actual (numerador): ||x_l - x*||
+                error_curr = self.norm(x - gt) 
+                # Tasa de convergencia: r(l) = ||x_l - x*|| / ||x_{l-1} - x*||
+                # Evitamos la división por cero si el error_prev es 0.
+                rate = (error_curr / error_prev)
+                convergence_rates.append(rate)
+                # Actualizar el error anterior para la próxima iteración
+                error_prev = error_curr
+                # ------------------------------------------
             
             if gt is not None:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
@@ -255,17 +276,26 @@ class Laista(nn.Module):
                     x_norm = x_detached
                 psnrs.append(psnr(gt, x_norm).cpu())
                 mses.append(mse(gt, x_norm).cpu())
+                changes_vectors.append(self.norm(x-x_old).cpu())
 
         # Guardar métricas en archivos
         if gt is not None:
-            np.save('metricas/Laista_error.npy', np.array([e.cpu().numpy() for e in errors]))
-            np.save('metricas/Laista_psnr.npy', psnrs)
-            np.save('metricas/Laista_mse.npy', mses)
+            if ratio is not None:
+                np.save(f'metricas/Laista_psnr{ratio}.npy', psnrs)
+                np.save(f'metricas/Laista_mse{ratio}.npy', mses)
+                np.save(f'metricas/Laista_convergence_rate{ratio}.npy', convergence_rates)
+                np.save(f'metricas/Laista_change_vector{ratio}.npy', changes_vectors)                 
+            else:
+                np.save(f'metricas/Laista_psnr.npy', psnrs)
+                np.save(f'metricas/Laista_mse.npy', mses)
+                np.save(f'metricas/Laista_convergence_rate.npy', convergence_rates)
+                np.save(f'metricas/Laista_change_vector.npy', changes_vectors)    
+
         # --- Visualización de resultados ---
         if verbose:
             if gt is not None:
-                print(f'PSNR: {psnrs[-1]}')
-                print(f'MSE: {mses[-1]}')
+                print(f'PSNR 1 sample: {np.array(psnrs)[:,0][-1]}')
+                print(f'MSE 1 sample: {np.array(mses)[:,0][-1]}')
             
             # Gráfica del Error de Fidelidad
             plt.figure(figsize=(12, 5))

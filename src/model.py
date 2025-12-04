@@ -200,7 +200,10 @@ class Accelerator(nn.Module):
         h = h / (self.T+1)
 
         v = self.decoder(h)
-
+        beta = 0.1
+        norm_v = torch.norm(v)
+        if norm_v > beta:
+            v = v*(beta/norm_v)
         return v
 
 class Laista(nn.Module):
@@ -295,7 +298,7 @@ class Laista(nn.Module):
         mses = []
         convergence_rates = []
         changes_vectors = []
-
+        xs = []
         if gt is not None:
             # Usamos torch.linalg.norm() para la norma Euclidiana (L2)
             error_prev = self.norm(x - gt)
@@ -322,7 +325,7 @@ class Laista(nn.Module):
             if len(history) > self.T:
                 # print('entra')
                 history.pop(0)
-
+            xs.append(x)
             x_detached = x.detach()
 
             
@@ -341,7 +344,7 @@ class Laista(nn.Module):
                 error_prev = error_curr
                 # ------------------------------------------
             
-            if gt is not None and return_rates_matrix==False:
+            if gt is not None:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
                 error = self.fidelity.forward(x, y, self.H).detach()
                 errors.append(error.detach().cpu())
@@ -405,9 +408,12 @@ class Laista(nn.Module):
 
         if return_rates_matrix == True:
             # stacked_rates = torch.stack(convergence_rates)
-            stacked_rates = torch.stack(changes_vectors)
-            R_LAISTA_matrix = stacked_rates.T.contiguous()
-            R_LAISTA_matrix = R_LAISTA_matrix.to(self.device)
-            return z, R_LAISTA_matrix
+            # R_LAISTA_matrix = stacked_rates.T.contiguous()
+            # R_LAISTA_matrix = R_LAISTA_matrix.to(self.device)
+            # return z, R_LAISTA_matrix
+            R = torch.stack(changes_vectors, dim=0)     # (T, B)
+            R = R.transpose(0, 1).contiguous()          # (B, T)
+            R = R.to(self.device)                       # mover a GPU
+            return z, R, xs
         else:
-            return z   
+            return z, xs   

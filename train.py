@@ -44,7 +44,7 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     set_seed(config['seed'])
     device = torch.device(config['device'] if torch.cuda.is_available() else 'cpu')
     print(f"Usando dispositivo: {device}")
-    LAMBDA_CONVERGENCE = 0.01
+    LAMBDA_CONVERGENCE = 0.1
     # 3. Preparar los Datos
     # -----------------------
     # train_loader, val_loader, test_loader = get_dataloaders(

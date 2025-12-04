@@ -49,9 +49,10 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device, lambda_reg):
         # 2. Forward pass completo del modelo
         y = model.acquistion_model(img_gt)
         x0 = model.acquistion_model.forward(y, type_calculation="backward")
-        img_hat, R_LAISTA = model(y, x0=x0, gt=img_gt, return_rates_matrix=True)
+        img_hat, R_LAISTA, xs = model(y, x0=x0, gt=img_gt, return_rates_matrix=True)
         # img_hat = model(y, x0=x0)
-
+        # print("R_LAISTA:", type(R_LAISTA), R_LAISTA.shape if hasattr(R_LAISTA, "shape") else R_LAISTA)
+        # print("R_vector_gt:", type(R_vector_gt), R_vector_gt.shape if hasattr(R_vector_gt, "shape") else R_vector_gt)
         if img_hat.max() > img_hat.min():
             img_hat_norm = (img_hat - img_hat.min()) / (img_hat.max() - img_hat.min())
         else:
@@ -59,9 +60,27 @@ def train_one_epoch(model, dataloader, optimizer, loss_fn, device, lambda_reg):
         # 3. Calcular la pérdida
         loss = loss_fn(img_hat_norm, img_gt) 
         psnr = psnr_metric(img_hat_norm, img_gt).item()
-        loss_per_sample = loss.mean(dim=[1, 2, 3])
-        loss_convergence_reg = convergence_loss_fn(R_LAISTA, R_vector_gt)
-        loss_total = loss_per_sample.mean() + lambda_reg*loss_convergence_reg
+        loss_reconstruction = loss.mean(dim=[1, 2, 3])
+        max_L = R_LAISTA.abs().max() + 1e-8
+        max_gt = R_vector_gt.abs().max() + 1e-8
+        R_LAISTA_norm = R_LAISTA/max_L
+        R_vector_gt_norm = R_vector_gt/max_gt
+        # loss_convergence_reg = convergence_loss_fn(R_LAISTA, R_vector_gt)
+        loss_convergence_reg = convergence_loss_fn(R_LAISTA_norm, R_vector_gt_norm)
+
+        deep_loss = 0.0
+        T = len(xs)
+        w = 1.0/T
+        for x_k in xs:
+            if x_k.max() > x_k.min():
+                x_k_norm = (x_k - x_k.min())/(x_k.max()-x_k.min())
+            else:
+                x_k_norm = x_k
+            loss_k = loss_fn(x_k_norm, img_gt)
+            loss_k = loss_k.mean(dim=[1,2,3])
+            deep_loss += w*loss_k.mean()
+
+        loss_total = loss_reconstruction.mean() + deep_loss + lambda_reg*loss_convergence_reg
         # 4. Backpropagation (cálculo de gradientes)
         loss_total.backward()
         
@@ -97,7 +116,7 @@ def evaluate(model, dataloader, loss_fn, device, lambda_reg):
         # Forward pass completo
         y = model.acquistion_model(img_gt)
         x0 = model.acquistion_model.forward(y, type_calculation="backward")
-        img_hat, R_LAISTA = model(y, x0=x0, gt=img_gt, return_rates_matrix=True)
+        img_hat, R_LAISTA, xs = model(y, x0=x0, gt=img_gt, return_rates_matrix=True)
         # img_hat = model(y, x0=x0)
         if img_hat.max() > img_hat.min():
             img_hat_norm = (img_hat - img_hat.min()) / (img_hat.max() - img_hat.min())
@@ -106,10 +125,27 @@ def evaluate(model, dataloader, loss_fn, device, lambda_reg):
 
         loss = loss_fn(img_hat_norm, img_gt)
         psnr = psnr_metric(img_hat_norm, img_gt).item()
+        loss_reconstruction = loss.mean(dim=[1, 2, 3])
+        max_L = R_LAISTA.abs().max() + 1e-8
+        max_gt = R_vector_gt.abs().max() + 1e-8
+        R_LAISTA_norm = R_LAISTA/max_L
+        R_vector_gt_norm = R_vector_gt/max_gt
+        # loss_convergence_reg = convergence_loss_fn(R_LAISTA, R_vector_gt)
+        loss_convergence_reg = convergence_loss_fn(R_LAISTA_norm, R_vector_gt_norm)
 
-        loss_per_sample = loss.mean(dim=[1, 2, 3])
-        loss_convergence_reg = convergence_loss_fn(R_LAISTA, R_vector_gt)
-        loss_total = loss_per_sample.mean() + lambda_reg*loss_convergence_reg
+        deep_loss = 0.0
+        T = len(xs)
+        w = 1.0/T
+        for x_k in xs:
+            if x_k.max() > x_k.min():
+                x_k_norm = (x_k - x_k.min())/(x_k.max()-x_k.min())
+            else:
+                x_k_norm = x_k
+            loss_k = loss_fn(x_k_norm, img_gt)
+            loss_k = loss_k.mean(dim=[1,2,3])
+            deep_loss += w*loss_k.mean()
+
+        loss_total = loss_reconstruction.mean() + deep_loss + lambda_reg*loss_convergence_reg
 
         # Actualizar y mostrar métricas
         loss_meter.update(loss_total.item(), img_gt.size(0))

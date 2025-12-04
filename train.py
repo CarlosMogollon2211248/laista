@@ -44,7 +44,7 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     set_seed(config['seed'])
     device = torch.device(config['device'] if torch.cuda.is_available() else 'cpu')
     print(f"Usando dispositivo: {device}")
-    LAMBDA_CONVERGENCE = 1e-3
+    LAMBDA_CONVERGENCE = 0.01
     # 3. Preparar los Datos
     # -----------------------
     # train_loader, val_loader, test_loader = get_dataloaders(
@@ -144,9 +144,10 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     #     optimizer, mode='min', factor=0.1, patience=5
     # )
     # Inicialización del Scheduler (Ya la tienes bien)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.1, patience=5 
-        )
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    #     optimizer, mode='min', factor=0.1, patience=5 
+    #     )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,T_max=1000001)
 
     # 5. Inicializar Logging (Weights & Biases)
     # ---------------------------------------------
@@ -170,6 +171,7 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
         train_loss, train_psnr = train_one_epoch(model, train_loader, optimizer, loss_fn, device, LAMBDA_CONVERGENCE)
         val_loss, val_psnr = evaluate(model, val_loader, loss_fn, device, LAMBDA_CONVERGENCE)
         
+        # scheduler.step(val_loss)
         scheduler.step(val_loss)
         current_lr = optimizer.param_groups[0]['lr']
 
@@ -207,7 +209,7 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     # x0 = acquisition_model(y,type_calculation='backward')
     # x_hat = model(y, x0=x0, gt=sample, verbose=True)
 
-    test_loss, test_psnr = evaluate(model, test_loader, loss_fn, device)
+    test_loss, test_psnr = evaluate(model, test_loader, loss_fn, device, LAMBDA_CONVERGENCE)
 
     print(f"\n===================================================")
     # Usar solo la variable test_loss (que ahora es el float)

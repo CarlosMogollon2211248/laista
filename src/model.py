@@ -112,14 +112,75 @@ class Down(nn.Module):
 
     def forward(self, x):
         return self.maxpool_conv(x)
-    
+
+class ConvNeXtLiteBlock(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.dw = spectral_norm(nn.Conv2d(dim, dim, kernel_size=7, padding=3, groups=dim))
+        self.pw1 = spectral_norm(nn.Conv2d(dim, 4*dim, kernel_size=1))
+        self.act = nn.GELU()
+        self.pw2 = spectral_norm(nn.Conv2d(4*dim, dim, kernel_size=1))
+        self.res_scale = nn.Parameter(torch.tensor(0.1), requires_grad=True)
+
+    def forward(self, x):
+        identity = x
+        x = self.dw(x)
+        x = self.pw1(x)
+        x = self.act(x)
+        x = self.pw2(x)
+        return identity + self.res_scale * x
+
+
+class EncoderConvNeXtLite(nn.Module):
+    """
+    Encoder estable, sin downsampling.
+    """
+    def __init__(self, in_channels=1, features=32, depth=3):
+        super().__init__()
+
+        self.stem = spectral_norm(
+            nn.Conv2d(in_channels, features, kernel_size=3, padding=1)
+        )
+
+        blocks = []
+        for _ in range(depth):
+            blocks.append(ConvNeXtLiteBlock(features))
+
+        self.blocks = nn.Sequential(*blocks)
+
+    def forward(self, x):
+        x = self.stem(x)
+        x = self.blocks(x)
+        return x
+
+class DecoderConvNeXtLite(nn.Module):
+    def __init__(self, out_channels=1, features=32, depth=3):
+        super().__init__()
+
+        blocks = []
+        for _ in range(depth):
+            blocks.append(ConvNeXtLiteBlock(features))
+
+        self.blocks = nn.Sequential(*blocks)
+
+        self.final = spectral_norm(
+            nn.Conv2d(features, out_channels, kernel_size=3, padding=1)
+        )
+
+    def forward(self, x):
+        x = self.blocks(x)
+        x = self.final(x)
+        return x
 
 class Accelerator(nn.Module):
-    def __init__(self, num_iterations, n_channels, bilinear=False, scaling:int=1):
+    # def __init__(self, num_iterations, n_channels, bilinear=False, scaling:int=1):
+    def __init__(self, num_iterations, decoder, encoder):
         super(Accelerator, self).__init__()
 
-        self.decoder = Decoder(n_channels, bilinear, scaling)
-        self.encoder_shared = Encoder(n_channels, bilinear, scaling)
+        # self.decoder = Decoder(n_channels, bilinear, scaling)
+        # self.encoder_shared = Encoder(n_channels, bilinear, scaling)
+        self.decoder = decoder
+        self.encoder = encoder
         # self.encoders = nn.ModuleList([Encoder(n_channels, bilinear, scaling) for _ in range(num_iterations+1)])
         self.T = num_iterations
 
@@ -130,10 +191,10 @@ class Accelerator(nn.Module):
         # for i in range(self.T):
             # h_i = self.encoders[i + 1](history[i]) 
             # h = h + h_i 
-        h = self.encoder_shared(x)
+        h = self.encoder(x)
 
         for h_prev in history:
-            h_i = self.encoder_shared(h_prev)
+            h_i = self.encoder(h_prev)
             h = h + h_i
 
         h = h / (self.T+1)
@@ -184,17 +245,24 @@ class Laista(nn.Module):
 
         # Hiperparámetros fijos
         self.max_iters = max_iters
-        self.alpha = alpha
-        self._lambda = _lambda
+        # self.alpha = alpha
+        # self._lambda = _lambda
+        self.alpha = nn.Parameter(torch.tensor(alpha, dtype=torch.float32))
+        self._lambda = nn.Parameter(torch.tensor(_lambda, dtype=torch.float32))
 
         # Red neuronal de aceleración y sus parámetros
         self.T = num_iterations
         self.n_channels = n_channels
         self.device = device
-        if device is not None:
-            self.acc = Accelerator(self.T, self.n_channels).to(device)
-        else:
-            self.acc = Accelerator(self.T, self.n_channels)
+        decoder = Decoder(self.n_channels, False, 1)
+        encoder = Encoder(self.n_channels, False, 1)
+        # encoder = EncoderConvNeXtLite(in_channels=1, features=32, depth=3)
+        # decoder = DecoderConvNeXtLite(out_channels=1, features=32, depth=3)
+        self.acc = Accelerator(
+            num_iterations= self.T,
+            decoder= decoder,
+            encoder= encoder
+            ).to(device)
         self.norm = lambda x: torch.linalg.norm(x.flatten(start_dim=1), ord=2, dim=-1)
 
     def forward(self, y, gt=None, x0=None, ratio=None, verbose=False, return_rates_matrix=False):
@@ -218,8 +286,9 @@ class Laista(nn.Module):
         z = x.clone()
         
         # initial_x = x.detach().clone() # Usamos una copia desatachada
-        # history = [initial_x.clone() for _ in range(self.T)]
         history = [x.clone()] * self.T 
+        # grad = self.alpha*self.fidelity.grad(z, y, self.H)
+        # history = [grad.detach().clone()] * self.T
 
         errors = []
         psnrs = []
@@ -236,16 +305,22 @@ class Laista(nn.Module):
             x_old = x.clone()
             # Paso de gradiente y proximal (actualización de x)
             # x.requires_grad_(True)
+            # grad = self.fidelity.grad(z, y, self.H)
+            # print(f'shape of grad {grad.shape} in iteration {i}')
             x = z - self.alpha * self.fidelity.grad(z, y, self.H)
+            # x = z - self.alpha*grad
             x = self.prior.prox(x, self._lambda)
             x.requires_grad_(True)
             # Paso de aceleración aprendido (actualización de z)
             z = x + self.acc(x_old, history)
+            # z = x + self.acc(grad, history)
             # z = self.prior.prox(z, self._lambda)
             # z.requires_grad_(True)
             
             history.append(x)
+            # history.append(grad.detach().clone())
             if len(history) > self.T:
+                # print('entra')
                 history.pop(0)
 
             x_detached = x.detach()

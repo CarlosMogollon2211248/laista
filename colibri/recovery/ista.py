@@ -6,6 +6,7 @@ from colibri.recovery.terms.prior import Sparsity
 import matplotlib.pyplot as plt
 import numpy as np
 from colibri.metrics import psnr, mse
+from tqdm import tqdm
 
 class Ista(nn.Module):
     r"""
@@ -82,7 +83,7 @@ class Ista(nn.Module):
             error_prev = self.norm(x - gt)
             # --------------------------------------
 
-        for i in range(self.max_iters):
+        for i in tqdm(range(self.max_iters), colour='green'):
 
             x_old = x.clone()
 
@@ -110,20 +111,22 @@ class Ista(nn.Module):
             error = self.fidelity.forward(x, y, self.H)
             errors.append(error)
             if gt is not None:
-                psnrs.append(psnr(gt, x_old, data_range=1.0))
-                mses.append(mse(gt, x_old))
-                changes_vectors.append(self.norm(x-x_old))
+                psnrs.append(psnr(gt, x_old, data_range=1.0).detach().cpu())
+                mses.append(mse(gt, x_old).detach().cpu())
+                changes_vectors.append(self.norm(x-x_old).detach().cpu())
                    
         # Graficar y guardar el error
         np.save('metricas/Ista_error.npy', errors)
 
         if gt is not None:
             if ratio is not None:
+                np.save(f'metricas/Ista_error{ratio}.npy', errors)
                 np.save(f'metricas/Ista_psnr{ratio}.npy', psnrs)
                 np.save(f'metricas/Ista_mse{ratio}.npy', mses)
                 np.save(f'metricas/Ista_convergence_rate{ratio}.npy', convergence_rates)
                 np.save(f'metricas/Ista_change_vector{ratio}.npy', changes_vectors)                 
             else:
+                np.save(f'metricas/Ista_error.npy', errors)
                 np.save(f'metricas/Ista_psnr.npy', psnrs)
                 np.save(f'metricas/Ista_mse.npy', mses)
                 np.save(f'metricas/Ista_convergence_rate.npy', convergence_rates)

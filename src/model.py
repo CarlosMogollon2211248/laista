@@ -336,7 +336,7 @@ class Laista(nn.Module):
                 # Tasa de convergencia: r(l) = ||x_l - x*|| / ||x_{l-1} - x*||
                 # Evitamos la división por cero si el error_prev es 0.
                 rate = (error_curr / error_prev)
-                convergence_rates.append(rate.cpu())
+                convergence_rates.append(rate.detach().cpu())
                 # Actualizar el error anterior para la próxima iteración
                 error_prev = error_curr
                 # ------------------------------------------
@@ -344,23 +344,25 @@ class Laista(nn.Module):
             if gt is not None and return_rates_matrix==False:
                 # Normalizar la reconstrucción para un cálculo de PSNR correcto
                 error = self.fidelity.forward(x, y, self.H).detach()
-                errors.append(error.cpu())
+                errors.append(error.detach().cpu())
                 if x_detached.max() > x_detached.min():
                     x_norm = (x_detached - x_detached.min()) / (x_detached.max() - x_detached.min())
                 else:
                     x_norm = x_detached
                 psnrs.append(psnr(gt, x_norm, data_range=1.0).cpu())
                 mses.append(mse(gt, x_norm).cpu())
-                changes_vectors.append(self.norm(x-x_old).cpu())
+                changes_vectors.append(self.norm(x-x_old).detach().cpu())
 
         # Guardar métricas en archivos
         if gt is not None and return_rates_matrix==False:
             if ratio is not None:
+                np.save(f'metricas/Laista_error{ratio}.npy', errors)
                 np.save(f'metricas/Laista_psnr{ratio}.npy', psnrs)
                 np.save(f'metricas/Laista_mse{ratio}.npy', mses)
                 np.save(f'metricas/Laista_convergence_rate{ratio}.npy', convergence_rates)
                 np.save(f'metricas/Laista_change_vector{ratio}.npy', changes_vectors)                 
             else:
+                np.save(f'metricas/Laista_error.npy', errors)
                 np.save(f'metricas/Laista_psnr.npy', psnrs)
                 np.save(f'metricas/Laista_mse.npy', mses)
                 np.save(f'metricas/Laista_convergence_rate.npy', convergence_rates)
@@ -400,10 +402,12 @@ class Laista(nn.Module):
 
             plt.tight_layout()
             plt.show()
-        stacked_rates = torch.stack(convergence_rates)
-        R_LAISTA_matrix = stacked_rates.T.contiguous()
-        R_LAISTA_matrix = R_LAISTA_matrix.to(self.device)
+
         if return_rates_matrix == True:
+            # stacked_rates = torch.stack(convergence_rates)
+            stacked_rates = torch.stack(changes_vectors)
+            R_LAISTA_matrix = stacked_rates.T.contiguous()
+            R_LAISTA_matrix = R_LAISTA_matrix.to(self.device)
             return z, R_LAISTA_matrix
         else:
             return z   

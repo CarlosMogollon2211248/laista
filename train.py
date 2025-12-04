@@ -51,9 +51,13 @@ def main(config_path='configs/spc_fashionmnist.yaml'):
     #     batch_size=config['data']['batch_size'],
     #     img_size=config['data']['img_size']
     # )
+    # train_loader, val_loader, test_loader = get_convergence_dataloaders(
+    #     config, 
+    #     R_star_path='FISTA_optimal_convergence_R_star.npy' # Ajusta la ruta si es necesario
+    #     )
     train_loader, val_loader, test_loader = get_convergence_dataloaders(
         config, 
-        R_star_path='FISTA_optimal_convergence_R_star.npy' # Ajusta la ruta si es necesario
+        R_star_path='FISTA_optimal_change_vector.npy' # Ajusta la ruta si es necesario
         )
 
     # 4. Preparar Modelos y Optimizador

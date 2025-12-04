@@ -122,7 +122,8 @@ def generate_reference_rates():
     
     R_star_full = np.concatenate(all_rates_tensors, axis=1) # Shape [10000, 180]
     R_star_full = R_star_full.T
-    output_path = 'FISTA_optimal_convergence_R_star.npy'
+    # output_path = 'FISTA_optimal_convergence_R_star.npy'
+    output_path = 'FISTA_optimal_change_vector.npy'
     np.save(output_path, R_star_full)
     
     print("\n" + "="*50)

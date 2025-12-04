@@ -132,11 +132,13 @@ class Fista(nn.Module):
 
         if gt is not None:
             if ratio is not None:
+                np.save(f'metricas/Fista_error{ratio}.npy', errors)
                 np.save(f'metricas/Fista_psnr{ratio}.npy', psnrs)
                 np.save(f'metricas/Fista_mse{ratio}.npy', mses)
                 np.save(f'metricas/Fista_convergence_rate{ratio}.npy', convergence_rates) 
                 np.save(f'metricas/Fista_change_vector{ratio}.npy', changes_vectors) 
             else:
+                np.save(f'metricas/Fista_error.npy', errors)                
                 np.save(f'metricas/Fista_psnr.npy', psnrs)
                 np.save(f'metricas/Fista_mse.npy', mses)
                 np.save(f'metricas/Fista_convergence_rate.npy', convergence_rates) 
@@ -174,8 +176,15 @@ class Fista(nn.Module):
                 plt.ylabel(r'$r(l)$', fontsize=14)
                 plt.xlabel(r'Iteration', fontsize=14)
                 plt.grid('on')
-                plt.legend(fontsize=14)                
+                plt.legend(fontsize=14)
+
+                plt.figure()
+                plt.plot(changes_vectors, color = 'g', label = 'FISTA Change Vector')
+                plt.ylabel(r'$r(l)$', fontsize=14)
+                plt.xlabel(r'Iteration', fontsize=14)
+                plt.grid('on')
+                plt.legend(fontsize=14)                 
         if return_rates_matrix == True:
-            return x, convergence_rates
+            return x, changes_vectors
         else:
             return x

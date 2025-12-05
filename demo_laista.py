@@ -78,46 +78,57 @@ best_model_path = os.path.join(checkpoints_dir, f"best_model_{config['wandb']['n
 checkpoint = torch.load(best_model_path, weights_only=True)
 model.load_state_dict(checkpoint['model_state_dict'])
 # ¡CORRECCIÓN AQUÍ! Desempaquetar la tupla
-sample = next(iter(test_loader))[0].to(device)[:1]#.unsqueeze(0)
+sample = next(iter(test_loader))[0].to(device)#[:1]#.unsqueeze(0)
 print(sample.shape)
 y = acquisition_model(sample,type_calculation='forward')
 x0 = acquisition_model(y,type_calculation='backward')
-x_hat = model(y, x0=x0, gt=sample, verbose=True)
+x_hat, _ = model(y, x0=x0, gt=sample, verbose=True)
 
-# basis = DCT2D()
+acquisition_name = 'spc'
 
-# theta = basis.forward(x_hat).detach()
+ratio = 0.7
+if acquisition_name == "spc":
+    n_measurements = int(ratio*(32**2))
+    print('numero mediciones', n_measurements)
+    n_measurements_sqrt = int(math.sqrt(n_measurements))
+    target_size = n_measurements_sqrt ** 2 
+    acquisition_config["n_measurements"] = n_measurements
 
-# normalize = lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+basis = DCT2D()
 
-# plt.figure(figsize=(10, 10))
+theta = basis.forward(x_hat).detach()
 
-# plt.subplot(1, 4, 1)
-# plt.title("Reference")
-# plt.imshow(sample[0, :, :].permute(1, 2, 0), cmap="gray")
-# plt.xticks([])
-# plt.yticks([])
+normalize = lambda x: (x - torch.min(x)) / (torch.max(x) - torch.min(x))
 
-# plt.subplot(1, 4, 2)
-# plt.title("Sparse Representation")
-# plt.imshow(abs(normalize(theta[0, :, :])).permute(1, 2, 0), cmap="gray")
-# plt.xticks([])
-# plt.yticks([])
+plt.figure(figsize=(10, 10))
+
+plt.subplot(1, 4, 1)
+plt.title("Reference")
+plt.imshow(sample[0, :, :].cpu().permute(1, 2, 0), cmap="gray")
+plt.xticks([])
+plt.yticks([])
+
+plt.subplot(1, 4, 2)
+plt.title("Sparse Representation")
+plt.imshow(abs(normalize(theta[0, :, :])).cpu().permute(1, 2, 0), cmap="gray")
+plt.xticks([])
+plt.yticks([])
 
 
-# y = y[:, :n_measurements, :]  # Recortar para hacer el re shape
-# y = y.reshape(y.shape[0], 1, int(math.sqrt(n_measurements)), int(math.sqrt(n_measurements))) 
+if acquisition_name == "spc":
+    y = y[:, :target_size, :]  # Recortar para hacer el re shape
+    y = y.reshape(y.shape[0], 1, n_measurements_sqrt, n_measurements_sqrt) # Mejor forma para visualizar
 
-# plt.subplot(1, 4, 3)
-# plt.title("Measurement")
-# plt.imshow(normalize(y[0, :, :]).permute(1, 2, 0).detach().numpy(), cmap="gray")
-# plt.xticks([])
-# plt.yticks([])
+plt.subplot(1, 4, 3)
+plt.title("Measurement")
+plt.imshow(normalize(y[0, :, :]).cpu().permute(1, 2, 0).detach().numpy(), cmap="gray")
+plt.xticks([])
+plt.yticks([])
 
-# plt.subplot(1, 4, 4)
-# plt.title("Reconstruction")
-# plt.imshow(normalize(x_hat[0, :, :]).permute(1, 2, 0).detach().cpu().numpy(), cmap="gray")
-# plt.xticks([])
-# plt.yticks([])
+plt.subplot(1, 4, 4)
+plt.title("Reconstruction")
+plt.imshow(normalize(x_hat[0, :, :]).cpu().permute(1, 2, 0).detach().cpu().numpy(), cmap="gray")
+plt.xticks([])
+plt.yticks([])
 
-# plt.show()
+plt.show()
